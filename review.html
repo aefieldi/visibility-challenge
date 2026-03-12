@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visibility Challenge — Review Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Montserrat',sans-serif;background:linear-gradient(135deg,#D4B5F7 0%,#A8D5FF 50%,#8FB8E8 100%);min-height:100vh;padding:20px;color:#2a2a2a}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 20% 80%,rgba(212,255,0,.12) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(212,181,247,.5) 0%,transparent 50%);pointer-events:none;z-index:0}
+.container{max-width:1100px;margin:0 auto;position:relative;z-index:1}
+header{text-align:center;padding:36px 20px;background:rgba(255,255,255,.95);border-radius:20px;box-shadow:0 8px 32px rgba(200,181,232,.3);margin-bottom:30px}
+h1{background:linear-gradient(135deg,#B084E8,#6BA3E8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:2em;font-weight:700;margin-bottom:6px}
+.sub{color:#8B7BA8;font-size:1em;font-style:italic}
+.card{background:rgba(255,255,255,.95);border-radius:20px;padding:30px;box-shadow:0 8px 32px rgba(200,181,232,.3);margin-bottom:24px}
+h2{background:linear-gradient(135deg,#B084E8,#6BA3E8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.5em;font-weight:700;margin-bottom:18px}
+h3{color:#7B5FA8;font-size:1.1em;font-weight:600;margin-bottom:12px}
+.drop-zone{border:3px dashed rgba(176,132,232,.5);border-radius:16px;padding:50px 20px;text-align:center;cursor:pointer;transition:all .3s;background:linear-gradient(135deg,rgba(176,132,232,.06),rgba(107,163,232,.06))}
+.drop-zone:hover,.drop-zone.dragover{border-color:#CCFF00;background:linear-gradient(135deg,rgba(204,255,0,.1),rgba(176,132,232,.1))}
+.drop-zone p{color:#8B7BA8;font-size:1.05em;margin-bottom:12px}
+.drop-zone .hint{font-size:.85em;color:#9B8BA8;font-style:italic}
+input[type=file]{display:none}
+button{padding:12px 28px;background:linear-gradient(135deg,#B084E8,#6BA3E8);color:#fff;border:none;border-radius:30px;cursor:pointer;font-size:.95em;font-weight:600;margin:6px 4px;transition:all .3s;font-family:inherit}
+button:hover{transform:translateY(-2px)}
+.btn-sm{padding:8px 18px;font-size:.85em}
+.btn-ghost{background:rgba(176,132,232,.15);color:#6B5B88}
+.btn-ghost:hover{background:rgba(176,132,232,.3)}
+/* stat cards */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:14px;padding:18px;text-align:center;border:2px solid rgba(232,213,242,.5)}
+.stat-num{font-size:2.2em;font-weight:700;background:linear-gradient(135deg,#B084E8,#6BA3E8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{font-size:.78em;color:#8B7BA8;font-weight:600;margin-top:4px}
+.stat-card.green .stat-num{background:linear-gradient(135deg,#CCFF00,#7BB800);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-card.pink .stat-num{background:linear-gradient(135deg,#E87CAE,#E8A87C);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+/* day grid */
+.day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:10px}
+.day-cell{border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;transition:all .2s;border:2px solid transparent}
+.day-cell:hover{transform:translateY(-2px)}
+.day-cell .dn{font-weight:700;font-size:.95em}
+.day-cell .ds{font-size:.65em;margin-top:2px;font-weight:600}
+.day-none{background:#f5f0fa;border-color:rgba(232,213,242,.5);color:#aaa}
+.day-am{background:rgba(176,132,232,.2);border-color:#B084E8;color:#6B5B88}
+.day-pm{background:rgba(107,163,232,.2);border-color:#6BA3E8;color:#6B5B88}
+.day-full{background:rgba(204,255,0,.25);border-color:#CCFF00;color:#2a2a2a}
+/* day legend */
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:.82em;color:#6B5B88}
+.legend-dot{width:14px;height:14px;border-radius:4px;border:2px solid}
+/* numbers table */
+table{width:100%;border-collapse:collapse;font-size:.88em}
+th{background:linear-gradient(135deg,rgba(176,132,232,.15),rgba(107,163,232,.15));color:#6B5B88;font-weight:700;padding:10px 12px;text-align:left;border-bottom:2px solid rgba(232,213,242,.5)}
+td{padding:9px 12px;border-bottom:1px solid rgba(232,213,242,.3);color:#2a2a2a}
+tr:hover td{background:rgba(204,255,0,.06)}
+.tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.75em;font-weight:700}
+.tag-done{background:rgba(204,255,0,.25);color:#4a7000}
+.tag-miss{background:rgba(232,213,242,.4);color:#8B7BA8}
+/* insight cards */
+.insight-card{background:#fff;border-radius:12px;padding:16px 18px;margin-bottom:12px;border-left:4px solid #B084E8}
+.insight-date{font-size:.78em;font-weight:700;color:#8B7BA8;margin-bottom:6px}
+.insight-label{font-size:.75em;font-weight:700;color:#B084E8;margin-bottom:4px;text-transform:uppercase}
+.insight-text{font-size:.92em;color:#2a2a2a;line-height:1.6;white-space:pre-wrap}
+/* modal */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);z-index:2000;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:#fff;border-radius:20px;padding:32px;max-width:700px;width:100%;max-height:88vh;overflow-y:auto;position:relative}
+.modal-close{position:absolute;top:14px;right:14px;background:#E8B5C8;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.1em;font-family:inherit;font-weight:700;color:#fff}
+.section-block{background:#f9f5f0;padding:14px 16px;border-radius:10px;margin-bottom:12px}
+.section-block .label{font-size:.78em;font-weight:700;color:#8B7BA8;margin-bottom:5px;text-transform:uppercase}
+.section-block .val{font-size:.93em;color:#2a2a2a;line-height:1.6;white-space:pre-wrap}
+/* tabs */
+.tab-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.tab-b{padding:10px 20px;border-radius:30px;border:2px solid rgba(200,181,232,.5);background:rgba(255,255,255,.9);color:#6B5B88;font-weight:600;font-size:.9em;cursor:pointer;transition:all .3s;font-family:inherit}
+.tab-b.active{background:linear-gradient(135deg,#B084E8,#6BA3E8);color:#fff;border-color:transparent}
+.tab-panel{display:none}.tab-panel.active{display:block;animation:fi .4s}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* checkin links */
+.link-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border-radius:10px;margin-bottom:8px;border:2px solid rgba(232,213,242,.4)}
+.link-row .day-badge{min-width:60px;font-weight:700;color:#B084E8;font-size:.9em}
+.link-row a{color:#6BA3E8;font-size:.85em;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.link-row a:hover{text-decoration:underline}
+.no-link{color:#ccc;font-size:.85em;font-style:italic}
+/* empty state */
+#dashboard{display:none}
+#loadScreen{display:block}
+</style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Visibility Challenge — Review Dashboard</h1>
+        <p class="sub">28-Day Visibility By Design &nbsp;·&nbsp; Amanda's Host View</p>
+    </header>
+
+    <!-- LOAD SCREEN -->
+    <div id="loadScreen" class="card">
+        <h2>Load Participant Data</h2>
+        <p style="color:#8B7BA8;margin-bottom:22px;font-size:.95em">Ask participants to go to <strong>Progress Tracker → Export My Data</strong> in their Daily Design System and send you the JSON file. Drop it here to review their full 28 days.</p>
+        <div class="drop-zone" id="dropZone" onclick="ge('fileInput').click()">
+            <div style="font-size:2.5em;margin-bottom:12px">📂</div>
+            <p>Drop participant's JSON file here or click to browse</p>
+            <span class="hint">File will be named something like: daily-design-system-2026-03-12.json</span>
+        </div>
+        <input type="file" id="fileInput" accept=".json">
+        <div style="text-align:center;margin-top:20px">
+            <p style="color:#8B7BA8;font-size:.85em;margin-bottom:12px">— or paste JSON text directly —</p>
+            <textarea id="jsonPaste" placeholder="Paste JSON here..." style="width:100%;padding:14px;border:2px solid rgba(232,213,242,.5);border-radius:12px;font-family:monospace;font-size:.85em;min-height:100px;resize:vertical"></textarea>
+            <button onclick="loadFromPaste()" style="margin-top:10px">Load Pasted Data</button>
+        </div>
+        <div id="loadError" style="display:none;margin-top:14px;color:#E87CAE;font-weight:600;text-align:center"></div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard">
+        <!-- Participant bar -->
+        <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:20px 28px">
+            <div>
+                <div style="font-size:.8em;color:#8B7BA8;font-weight:600;margin-bottom:3px">REVIEWING</div>
+                <div id="participantLabel" style="font-weight:700;font-size:1.1em;color:#2a2a2a"></div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn-sm" onclick="resetDashboard()">Load Different File</button>
+                <button class="btn-sm" onclick="exportSummary()">Export Summary</button>
+            </div>
+        </div>
+
+        <!-- Overview stats -->
+        <div class="card">
+            <h2>Overview</h2>
+            <div class="stats-grid" id="statsGrid"></div>
+            <h3>28-Day Completion Map</h3>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-dot" style="background:rgba(204,255,0,.25);border-color:#CCFF00"></div>Both AM + PM</div>
+                <div class="legend-item"><div class="legend-dot" style="background:rgba(176,132,232,.2);border-color:#B084E8"></div>Morning only</div>
+                <div class="legend-item"><div class="legend-dot" style="background:rgba(107,163,232,.2);border-color:#6BA3E8"></div>Evening only</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#f5f0fa;border-color:rgba(232,213,242,.5)"></div>Not completed</div>
+            </div>
+            <div class="day-grid" id="dayGrid"></div>
+            <p style="font-size:.8em;color:#9B8BA8;margin-top:8px;font-style:italic">Click any day to view full entry</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="card">
+            <div class="tab-bar">
+                <button class="tab-b active" onclick="switchTab('numbers',this)">Numbers</button>
+                <button class="tab-b" onclick="switchTab('insights',this)">Visibility Insights</button>
+                <button class="tab-b" onclick="switchTab('checkins',this)">Check-In Links</button>
+                <button class="tab-b" onclick="switchTab('snapshot',this)">Starting Point</button>
+            </div>
+
+            <!-- Numbers tab -->
+            <div id="tab-numbers" class="tab-panel active">
+                <h3>Daily Numbers Log</h3>
+                <div style="overflow-x:auto">
+                <table id="numbersTable">
+                    <thead><tr>
+                        <th>Date</th><th>AM</th><th>PM</th>
+                        <th>IG</th><th>Stories</th><th>TikTok</th><th>YouTube</th>
+                        <th>Skool</th><th>Comments</th><th>DMs</th>
+                    </tr></thead>
+                    <tbody id="numbersBody"></tbody>
+                </table>
+                </div>
+            </div>
+
+            <!-- Insights tab -->
+            <div id="tab-insights" class="tab-panel">
+                <h3>Visibility Insights Across All Days</h3>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+                    <button class="btn-sm btn-ghost" onclick="filterInsights('all',this)">All</button>
+                    <button class="btn-sm btn-ghost" onclick="filterInsights('visFelt',this)">How It Felt</button>
+                    <button class="btn-sm btn-ghost" onclick="filterInsights('visResistance',this)">Resistance</button>
+                    <button class="btn-sm btn-ghost" onclick="filterInsights('visConditioning',this)">Conditioning</button>
+                    <button class="btn-sm btn-ghost" onclick="filterInsights('visNoticing',this)">Noticing</button>
+                    <button class="btn-sm btn-ghost" onclick="filterInsights('visInsights',this)">Insights</button>
+                </div>
+                <div id="insightsList"></div>
+            </div>
+
+            <!-- Check-in links tab -->
+            <div id="tab-checkins" class="tab-panel">
+                <h3>Submitted Links</h3>
+                <div id="checkinLinksList"></div>
+            </div>
+
+            <!-- Snapshot tab -->
+            <div id="tab-snapshot" class="tab-panel">
+                <h3>Starting Point Snapshot</h3>
+                <div id="snapshotView"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Day modal -->
+    <div class="modal-overlay" id="dayModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal()">x</button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+var pData = null;
+var currentInsightFilter = 'all';
+
+function ge(id){ return document.getElementById(id); }
+
+// ── File loading ──────────────────────────────────────────────────────
+var dz = ge('dropZone');
+dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('dragover'); });
+dz.addEventListener('dragleave', function(){ dz.classList.remove('dragover'); });
+dz.addEventListener('drop', function(e){
+    e.preventDefault(); dz.classList.remove('dragover');
+    var f = e.dataTransfer.files[0];
+    if (f) readFile(f);
+});
+ge('fileInput').addEventListener('change', function(){
+    if (this.files[0]) readFile(this.files[0]);
+});
+
+function readFile(f) {
+    var r = new FileReader();
+    r.onload = function(e){ parseAndLoad(e.target.result); };
+    r.readAsText(f);
+}
+function loadFromPaste() {
+    var txt = ge('jsonPaste').value.trim();
+    if (!txt) { showError('Please paste JSON data first.'); return; }
+    parseAndLoad(txt);
+}
+function parseAndLoad(txt) {
+    try {
+        var obj = JSON.parse(txt);
+        pData = obj;
+        ge('loadError').style.display = 'none';
+        ge('loadScreen').style.display = 'none';
+        ge('dashboard').style.display = 'block';
+        buildDashboard();
+    } catch(e) {
+        showError('Could not read this file. Make sure it is the exported JSON from the Daily Design System.');
+    }
+}
+function showError(msg) {
+    var el = ge('loadError');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+function resetDashboard() {
+    pData = null;
+    ge('loadScreen').style.display = 'block';
+    ge('dashboard').style.display = 'none';
+    ge('jsonPaste').value = '';
+    ge('fileInput').value = '';
+}
+
+// ── Build dashboard ───────────────────────────────────────────────────
+function buildDashboard() {
+    var daily = pData.daily || {};
+    var misc  = pData.misc  || {};
+    var dates = Object.keys(daily).sort();
+
+    // Participant label
+    var startDate = misc.challengeStartDate ? new Date(misc.challengeStartDate).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'Unknown start date';
+    ge('participantLabel').textContent = 'Challenge started: ' + startDate + '  ·  Data file covers ' + dates.length + ' day(s)';
+
+    buildStats(daily, misc);
+    buildDayGrid(daily, misc);
+    buildNumbersTable(daily);
+    renderInsights('all');
+    buildCheckinLinks(misc);
+    buildSnapshot(misc);
+}
+
+function buildStats(daily, misc) {
+    var dates = Object.keys(daily);
+    var amDone = 0, pmDone = 0, bothDone = 0;
+    var totIG=0,totTT=0,totYT=0,totSkool=0,totDMs=0,totComments=0;
+    var insightDays = 0;
+    dates.forEach(function(d){
+        var r = daily[d];
+        if (r.morningComplete) amDone++;
+        if (r.eveningComplete) pmDone++;
+        if (r.morningComplete && r.eveningComplete) bothDone++;
+        totIG += parseInt(r.numIGPosts)||0;
+        totTT += parseInt(r.numTikToks)||0;
+        totYT += parseInt(r.numYouTube)||0;
+        totSkool += parseInt(r.numSkoolPosts)||0;
+        totDMs += parseInt(r.numDMs)||0;
+        totComments += parseInt(r.numComments)||0;
+        if ((r.visInsights||'').trim() || (r.visFelt||'').trim()) insightDays++;
+    });
+    var checkinLinks = misc.checkinLinks || {};
+    var ddsLinks = misc.ddsLinks || {};
+    var totalCI = Object.keys(checkinLinks).filter(function(k){ return checkinLinks[k]&&checkinLinks[k].trim(); }).length;
+    var totalDDS = Object.keys(ddsLinks).filter(function(k){ return ddsLinks[k]&&ddsLinks[k].trim(); }).length;
+
+    var stats = [
+        {num: amDone + ' / 28', label: 'Morning Practices', cls:''},
+        {num: pmDone + ' / 28', label: 'Evening Debriefs', cls:''},
+        {num: bothDone + ' / 28', label: 'Full Days (AM+PM)', cls:'green'},
+        {num: totalCI + ' / 28', label: 'Skool Check-Ins', cls:''},
+        {num: totalDDS + ' / 28', label: 'DDS Submitted', cls:'green'},
+        {num: insightDays, label: 'Days w/ Insights', cls:''},
+        {num: totIG + totTT, label: 'IG + TikTok Posts', cls:'pink'},
+        {num: totYT, label: 'YouTube Videos', cls:'pink'},
+        {num: totSkool, label: 'Skool Posts', cls:'pink'},
+        {num: totDMs, label: 'DMs Sent', cls:'pink'},
+        {num: totComments, label: 'Comments Left', cls:'pink'}
+    ];
+    ge('statsGrid').innerHTML = stats.map(function(s){
+        return '<div class="stat-card ' + s.cls + '"><div class="stat-num">' + s.num + '</div><div class="stat-label">' + s.label + '</div></div>';
+    }).join('');
+}
+
+function buildDayGrid(daily, misc) {
+    var startStr = misc.challengeStartDate;
+    var grid = ge('dayGrid');
+    var cells = '';
+    // day-of-week headers
+    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(function(d){
+        cells += '<div style="text-align:center;font-size:.7em;font-weight:700;color:#8B7BA8;padding:4px 0">' + d + '</div>';
+    });
+    // blank offset cells if start day isn't Sunday
+    var offset = 0;
+    if (startStr) {
+        offset = new Date(startStr).getDay();
+        for (var o = 0; o < offset; o++) cells += '<div></div>';
+    }
+    for (var day = 1; day <= 28; day++) {
+        var dateStr = '';
+        if (startStr) {
+            var dd = new Date(startStr);
+            dd.setDate(dd.getDate() + day - 1);
+            dateStr = dd.toISOString().split('T')[0];
+        }
+        var r = (dateStr && daily[dateStr]) ? daily[dateStr] : null;
+        var cls = 'day-none';
+        if (r && r.morningComplete && r.eveningComplete) cls = 'day-full';
+        else if (r && r.morningComplete) cls = 'day-am';
+        else if (r && r.eveningComplete) cls = 'day-pm';
+        var amPm = r ? ((r.morningComplete?'AM':'') + (r.eveningComplete?' PM':'')) : '';
+        cells += '<div class="day-cell ' + cls + '" onclick="openDay(\'' + dateStr + '\')" title="Day ' + day + (dateStr?' — '+dateStr:'') + '">' +
+            '<div class="dn">' + day + '</div>' +
+            '<div class="ds">' + amPm + '</div>' +
+            '</div>';
+    }
+    grid.innerHTML = cells;
+}
+
+function buildNumbersTable(daily) {
+    var dates = Object.keys(daily).sort();
+    var rows = '';
+    dates.forEach(function(date){
+        var r = daily[date];
+        var hasAny = r.numIGPosts||r.numStories||r.numTikToks||r.numYouTube||r.numSkoolPosts||r.numComments||r.numDMs||r.morningComplete||r.eveningComplete;
+        if (!hasAny) return;
+        var disp = new Date(date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        rows += '<tr>' +
+            '<td style="font-weight:600">' + disp + '</td>' +
+            '<td>' + (r.morningComplete ? '<span class="tag tag-done">Done</span>' : '<span class="tag tag-miss">—</span>') + '</td>' +
+            '<td>' + (r.eveningComplete ? '<span class="tag tag-done">Done</span>' : '<span class="tag tag-miss">—</span>') + '</td>' +
+            '<td>' + (r.numIGPosts||'—') + '</td>' +
+            '<td>' + (r.numStories||'—') + '</td>' +
+            '<td>' + (r.numTikToks||'—') + '</td>' +
+            '<td>' + (r.numYouTube||'—') + '</td>' +
+            '<td>' + (r.numSkoolPosts||'—') + '</td>' +
+            '<td>' + (r.numComments||'—') + '</td>' +
+            '<td>' + (r.numDMs||'—') + '</td>' +
+            '</tr>';
+    });
+    ge('numbersBody').innerHTML = rows || '<tr><td colspan="10" style="text-align:center;color:#aaa;padding:20px">No numbers data found</td></tr>';
+}
+
+function renderInsights(filter) {
+    currentInsightFilter = filter;
+    var daily = pData.daily || {};
+    var dates = Object.keys(daily).sort();
+    var fields = {
+        visFelt: {label:'How Visibility Felt', color:'#B084E8'},
+        visResistance: {label:'Resistance', color:'#E87CAE'},
+        visConditioning: {label:'Conditioning / Old Stories', color:'#E8A87C'},
+        visNoticing: {label:'What I\'m Noticing', color:'#6BA3E8'},
+        visInsights: {label:'Insights & Downloads', color:'#7B3FBE'}
+    };
+    var keys = filter === 'all' ? Object.keys(fields) : [filter];
+    var html = '';
+    dates.forEach(function(date){
+        var r = daily[date];
+        var disp = new Date(date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+        keys.forEach(function(k){
+            if (r[k] && r[k].trim()) {
+                var f = fields[k];
+                html += '<div class="insight-card" style="border-left-color:' + f.color + '">' +
+                    '<div class="insight-date">' + disp + '</div>' +
+                    '<div class="insight-label" style="color:' + f.color + '">' + f.label + '</div>' +
+                    '<div class="insight-text">' + r[k] + '</div>' +
+                    '</div>';
+            }
+        });
+    });
+    ge('insightsList').innerHTML = html || '<p style="color:#aaa;font-style:italic;padding:20px 0">No insights recorded for this filter.</p>';
+}
+
+function filterInsights(f, btn) {
+    renderInsights(f);
+    document.querySelectorAll('#tab-insights .btn-ghost').forEach(function(b){ b.style.background='rgba(176,132,232,.15)'; b.style.color='#6B5B88'; });
+    btn.style.background = 'linear-gradient(135deg,#B084E8,#6BA3E8)';
+    btn.style.color = '#fff';
+}
+
+function buildCheckinLinks(misc) {
+    var checkinLinks = misc.checkinLinks || {};
+    var ddsLinks = misc.ddsLinks || {};
+    var html = '';
+    for (var day = 1; day <= 28; day++) {
+        var ci = checkinLinks[day] || '';
+        var dds = ddsLinks[day] || '';
+        var hasSomething = ci.trim() || dds.trim();
+        html += '<div class="link-row" style="' + (hasSomething?'':'opacity:.5') + '">' +
+            '<span class="day-badge">Day ' + day + '</span>' +
+            '<div style="flex:1;display:flex;flex-direction:column;gap:4px">' +
+            '<div style="font-size:.75em;color:#8B7BA8;font-weight:600">Check-in: ' + (ci ? '<a href="' + ci + '" target="_blank">' + ci + '</a>' : '<span class="no-link">not submitted</span>') + '</div>' +
+            '<div style="font-size:.75em;color:#7B9B00;font-weight:600">DDS: ' + (dds ? '<a href="' + dds + '" target="_blank">' + dds + '</a>' : '<span class="no-link">not submitted</span>') + '</div>' +
+            '</div></div>';
+    }
+    ge('checkinLinksList').innerHTML = html;
+}
+
+function buildSnapshot(misc) {
+    var s = misc.snapshot || {};
+    var fields = [
+        {label:'Instagram Followers', val:s.ig, color:'#B084E8'},
+        {label:'TikTok Followers', val:s.tiktok, color:'#6BA3E8'},
+        {label:'YouTube Subscribers', val:s.youtube, color:'#E8A87C'},
+        {label:'Skool Members', val:s.skool, color:'#7B9B00'},
+        {label:'Monthly Recurring Revenue', val:s.mrr ? ('$' + s.mrr) : null, color:'#E87CAE'},
+        {label:'Email List Size', val:s.email, color:'#4A9BB5'}
+    ];
+    var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px">' +
+        fields.map(function(f){
+            return '<div style="background:#fff;padding:16px 18px;border-radius:12px;border-left:4px solid ' + f.color + '">' +
+                '<div style="font-size:.78em;color:#8B7BA8;font-weight:600;margin-bottom:4px">' + f.label + '</div>' +
+                '<div style="font-size:1.5em;font-weight:700;color:' + f.color + '">' + (f.val || '—') + '</div></div>';
+        }).join('') + '</div>';
+    if (s.notes && s.notes.trim()) {
+        html += '<div class="section-block"><div class="label">Starting Notes</div><div class="val">' + s.notes + '</div></div>';
+    }
+    ge('snapshotView').innerHTML = html || '<p style="color:#aaa;font-style:italic">No starting point data found.</p>';
+}
+
+// ── Day modal ─────────────────────────────────────────────────────────
+function openDay(dateStr) {
+    if (!dateStr || !pData.daily[dateStr]) {
+        ge('modalContent').innerHTML = '<p style="color:#aaa;font-style:italic;padding:20px 0">No data recorded for this day.</p>';
+        ge('dayModal').style.display = 'flex';
+        return;
+    }
+    var r = pData.daily[dateStr];
+    var disp = new Date(dateStr).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    var visFields = [
+        {key:'visFelt', label:'How Visibility Felt', color:'#B084E8'},
+        {key:'visResistance', label:'Resistance', color:'#E87CAE'},
+        {key:'visConditioning', label:'Conditioning / Old Stories', color:'#E8A87C'},
+        {key:'visNoticing', label:'What I\'m Noticing', color:'#6BA3E8'},
+        {key:'visInsights', label:'Insights & Downloads', color:'#7B3FBE'}
+    ];
+    function block(label, val, color) {
+        if (!val || !val.trim()) return '';
+        return '<div class="section-block" style="border-left:3px solid ' + (color||'#ddd') + '">' +
+            '<div class="label">' + label + '</div>' +
+            '<div class="val">' + val + '</div></div>';
+    }
+    ge('modalContent').innerHTML =
+        '<h2 style="color:#C8B5E8;margin-bottom:6px;font-size:1.3em">' + disp + '</h2>' +
+        '<div style="display:flex;gap:8px;margin-bottom:18px">' +
+        (r.morningComplete ? '<span class="tag tag-done">AM Complete</span>' : '<span class="tag tag-miss">AM Missed</span>') +
+        (r.eveningComplete ? '<span class="tag tag-done">PM Complete</span>' : '<span class="tag tag-miss">PM Missed</span>') +
+        '</div>' +
+        (r.challengeFocus ? '<div style="background:rgba(204,255,0,.15);padding:12px 16px;border-radius:10px;border-left:4px solid #CCFF00;margin-bottom:14px;font-weight:600">' + r.challengeFocus + '</div>' : '') +
+        block('Brain Dump', r.brainDump) +
+        block('Clear Energy / YES Tasks', r.energyYes, '#CCFF00') +
+        (r.tasks && r.tasks.some(function(t){return t;}) ?
+            '<div class="section-block"><div class="label">Top 3 Tasks</div>' +
+            r.tasks.map(function(task,i){
+                return task ? '<div style="padding:6px 0;border-bottom:1px solid rgba(232,213,242,.3)">' +
+                    (r.tasksChecked&&r.tasksChecked[i]?'<strong style="color:#7B9B00">Done</strong> ':'<span style="color:#aaa">Pending</span> ') + task + '</div>' : '';
+            }).join('') + '</div>' : '') +
+        block('What Went Well', r.wentWell, '#B084E8') +
+        block('What Didn\'t Go Well', r.didntGoWell, '#E8A87C') +
+        block('What Didn\'t Get Done', r.patterns) +
+        (visFields.some(function(f){ return r[f.key]&&r[f.key].trim(); }) ?
+            '<div style="margin-top:6px">' +
+            visFields.map(function(f){ return block(f.label, r[f.key], f.color); }).join('') +
+            '</div>' : '') +
+        block('Other Content Ideas', r.contentIdeas, '#7B9B00');
+    ge('dayModal').style.display = 'flex';
+}
+function closeModal() { ge('dayModal').style.display = 'none'; }
+
+// ── Tab switching ─────────────────────────────────────────────────────
+function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+    document.querySelectorAll('.tab-b').forEach(function(b){ b.classList.remove('active'); });
+    ge('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+}
+
+// ── Export summary ────────────────────────────────────────────────────
+function exportSummary() {
+    if (!pData) return;
+    var daily = pData.daily || {};
+    var misc  = pData.misc  || {};
+    var dates = Object.keys(daily).sort();
+    var lines = ['PARTICIPANT REVIEW SUMMARY', '='.repeat(60)];
+    lines.push('Challenge Start: ' + (misc.challengeStartDate || 'unknown'));
+    lines.push('');
+    var amDone=0,pmDone=0,both=0;
+    dates.forEach(function(d){ var r=daily[d]; if(r.morningComplete)amDone++; if(r.eveningComplete)pmDone++; if(r.morningComplete&&r.eveningComplete)both++; });
+    lines.push('COMPLETION: ' + amDone + '/28 AM  |  ' + pmDone + '/28 PM  |  ' + both + '/28 Full Days');
+    lines.push('');
+    lines.push('DAILY NUMBERS:');
+    dates.forEach(function(d){
+        var r = daily[d];
+        if (r.numIGPosts||r.numTikToks||r.numYouTube||r.numSkoolPosts||r.numDMs) {
+            lines.push(d + ' — IG:' + (r.numIGPosts||0) + ' TT:' + (r.numTikToks||0) + ' YT:' + (r.numYouTube||0) + ' Skool:' + (r.numSkoolPosts||0) + ' DMs:' + (r.numDMs||0));
+        }
+    });
+    lines.push('');
+    lines.push('VISIBILITY INSIGHTS:');
+    dates.forEach(function(d){
+        var r = daily[d];
+        var parts = [];
+        if (r.visFelt&&r.visFelt.trim()) parts.push('HOW IT FELT: ' + r.visFelt);
+        if (r.visResistance&&r.visResistance.trim()) parts.push('RESISTANCE: ' + r.visResistance);
+        if (r.visConditioning&&r.visConditioning.trim()) parts.push('CONDITIONING: ' + r.visConditioning);
+        if (r.visInsights&&r.visInsights.trim()) parts.push('INSIGHTS: ' + r.visInsights);
+        if (parts.length) { lines.push(''); lines.push('--- ' + d + ' ---'); parts.forEach(function(p){ lines.push(p); }); }
+    });
+    var blob = new Blob([lines.join('\n')], {type:'text/plain'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'participant-review-' + new Date().toISOString().split('T')[0] + '.txt';
+    a.click();
+}
+</script>
+</body>
+</html>
