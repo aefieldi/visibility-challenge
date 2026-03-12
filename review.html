@@ -102,16 +102,19 @@ tr:hover td{background:rgba(204,255,0,.06)}
         </div>
         <input type="file" id="fileInput" accept=".json">
         <div style="text-align:center;margin-top:20px">
-            <p style="color:#8B7BA8;font-size:.85em;margin-bottom:12px">— or paste JSON text directly —</p>
-            <textarea id="jsonPaste" placeholder="Paste JSON here..." style="width:100%;padding:14px;border:2px solid rgba(232,213,242,.5);border-radius:12px;font-family:monospace;font-size:.85em;min-height:100px;resize:vertical"></textarea>
-            <button onclick="loadFromPaste()" style="margin-top:10px">Load Pasted Data</button>
+            <p style="color:#8B7BA8;font-size:.85em;margin-bottom:12px">— or paste their share link or JSON text directly —</p>
+            <textarea id="jsonPaste" placeholder="Paste participant's share link (https://...) or raw JSON here..." style="width:100%;padding:14px;border:2px solid rgba(232,213,242,.5);border-radius:12px;font-family:monospace;font-size:.85em;min-height:80px;resize:vertical"></textarea>
+            <button onclick="loadFromPaste()" style="margin-top:10px">Load Data</button>
         </div>
         <div id="loadError" style="display:none;margin-top:14px;color:#E87CAE;font-weight:600;text-align:center"></div>
     </div>
 
     <!-- DASHBOARD -->
     <div id="dashboard">
-        <!-- Participant bar -->
+        <div id="hashNotice" style="display:none;background:linear-gradient(135deg,rgba(204,255,0,.15),rgba(176,132,232,.15));border:2px solid rgba(204,255,0,.5);border-radius:12px;padding:14px 20px;margin-bottom:20px;color:#6B5B88;font-weight:600;font-size:.95em">
+                Loaded directly from participant's share link.
+            </div>
+            <!-- Participant bar -->
         <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:20px 28px">
             <div>
                 <div style="font-size:.8em;color:#8B7BA8;font-weight:600;margin-bottom:3px">REVIEWING</div>
@@ -206,7 +209,7 @@ var currentInsightFilter = 'all';
 function ge(id){ return document.getElementById(id); }
 
 // ── File loading ──────────────────────────────────────────────────────
-var dz = ge('dropZone');
+    var dz = ge('dropZone');
 dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('dragover'); });
 dz.addEventListener('dragleave', function(){ dz.classList.remove('dragover'); });
 dz.addEventListener('drop', function(e){
@@ -218,6 +221,21 @@ ge('fileInput').addEventListener('change', function(){
     if (this.files[0]) readFile(this.files[0]);
 });
 
+// Auto-load from URL hash if participant shared a link
+(function checkUrlHash(){
+    var hash = window.location.hash;
+    if (hash && hash.indexOf('#review=') === 0) {
+        var encoded = hash.replace('#review=', '');
+        try {
+            var decoded = decodeURIComponent(escape(atob(encoded)));
+            parseAndLoad(decoded);
+            ge('hashNotice').style.display = 'block';
+        } catch(e) {
+            showError('Could not read the link. Ask the participant to generate a new one.');
+        }
+    }
+})();
+
 function readFile(f) {
     var r = new FileReader();
     r.onload = function(e){ parseAndLoad(e.target.result); };
@@ -225,7 +243,19 @@ function readFile(f) {
 }
 function loadFromPaste() {
     var txt = ge('jsonPaste').value.trim();
-    if (!txt) { showError('Please paste JSON data first.'); return; }
+    if (!txt) { showError('Please paste a share link or JSON data first.'); return; }
+    // Handle share link format
+    if (txt.indexOf('#review=') !== -1) {
+        var encoded = txt.split('#review=')[1];
+        try {
+            var decoded = decodeURIComponent(escape(atob(encoded)));
+            parseAndLoad(decoded);
+            return;
+        } catch(e) {
+            showError('Could not read that link. Ask the participant to generate a new one.');
+            return;
+        }
+    }
     parseAndLoad(txt);
 }
 function parseAndLoad(txt) {
