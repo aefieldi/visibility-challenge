@@ -1,983 +1,805 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Visibility By Design System</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Montserrat',sans-serif;background:linear-gradient(135deg,#D4B5F7 0%,#A8D5FF 50%,#8FB8E8 100%);color:#2a2a2a;line-height:1.6;padding:20px;min-height:100vh}
-        body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 20% 80%,rgba(212,255,0,.12) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(212,181,247,.5) 0%,transparent 50%);pointer-events:none;z-index:0}
-        .container{max-width:1200px;margin:0 auto;position:relative;z-index:1}
-        header{text-align:center;margin-bottom:40px;padding:40px 20px;background:rgba(255,255,255,.95);border-radius:20px;box-shadow:0 8px 32px rgba(200,181,232,.3)}
-        h1{background:linear-gradient(135deg,#B084E8 0%,#6BA3E8 50%,#D4B5F7 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:2.5em;margin-bottom:10px;font-weight:700}
-        .tagline{color:#8B7BA8;font-style:italic;font-size:1.1em}
-        .accent{color:#8B6BA8;font-weight:700}
-        .date-display{margin:20px 0;font-size:1.2em;color:#6B5B88}
-        .tab-navigation{display:flex;gap:10px;margin-bottom:30px;flex-wrap:wrap;justify-content:center}
-        .tab-btn{padding:12px 22px;background:rgba(255,255,255,.9);border:2px solid rgba(200,181,232,.5);border-radius:30px;cursor:pointer;font-size:.95em;font-weight:600;color:#6B5B88;transition:all .3s}
-        .tab-btn:hover{background:#fff;border-color:#CCFF00;transform:translateY(-2px)}
-        .tab-btn.active{background:linear-gradient(135deg,#B084E8 0%,#6BA3E8 100%);color:#fff;border-color:transparent}
-        .tab-content{display:none;background:rgba(255,255,255,.95);padding:35px;border-radius:20px;box-shadow:0 8px 32px rgba(200,181,232,.3);margin-bottom:30px}
-        .tab-content.active{display:block;animation:fadeIn .5s}
-        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-        h2{background:linear-gradient(135deg,#B084E8 0%,#6BA3E8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px;font-size:1.8em;font-weight:700}
-        h3{color:#7B5FA8;margin:25px 0 15px;font-size:1.3em;font-weight:600}
-        textarea{width:100%;padding:15px;border:2px solid rgba(232,213,242,.5);border-radius:12px;font-family:inherit;font-size:1em;resize:vertical;min-height:120px;transition:all .3s;background:rgba(255,249,245,.8)}
-        textarea:focus{outline:none;border-color:#CCFF00;box-shadow:0 0 20px rgba(204,255,0,.2);background:#fff}
-        button{padding:14px 32px;background:linear-gradient(135deg,#B084E8 0%,#6BA3E8 100%);color:#fff;border:none;border-radius:30px;cursor:pointer;font-size:1em;font-weight:600;margin:10px 5px;transition:all .3s}
-        button:hover{transform:translateY(-3px)}
-        .save-notice{position:fixed;bottom:30px;right:30px;background:linear-gradient(135deg,#B084E8 0%,#6BA3E8 100%);color:#fff;padding:16px 30px;border-radius:30px;opacity:0;transition:opacity .3s;z-index:1000}
-        .save-notice.show{opacity:1}
-        .numbers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin:18px 0}
-        .number-field label{display:block;color:#6B5B88;font-weight:600;font-size:.88em;margin-bottom:6px}
-        .number-field input[type=number]{width:100%;padding:12px 14px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1.1em;font-weight:700;color:#B084E8;background:rgba(255,249,255,.8);transition:all .3s;text-align:center}
-        .number-field input[type=number]:focus{outline:none;border-color:#CCFF00}
-        .day-nav{display:flex;align-items:center;gap:14px;justify-content:space-between;background:linear-gradient(135deg,rgba(232,213,242,.3) 0%,rgba(213,232,247,.3) 100%);border-radius:14px;padding:16px 22px;margin-bottom:26px}
-        .day-nav-label{font-weight:700;color:#6B5B88;text-align:center;flex:1}
-        .day-nav-label .day-sub{font-size:.8em;font-weight:400;color:#8B7BA8;display:block;margin-top:3px;font-style:italic}
-        .day-nav button{margin:0;padding:10px 22px}
-        .challenge-focus-wrap{background:linear-gradient(135deg,rgba(204,255,0,.13) 0%,rgba(176,132,232,.13) 100%);border:2px solid rgba(204,255,0,.4);border-radius:15px;padding:22px 25px;margin-bottom:28px}
-        .challenge-focus-wrap label{display:block;color:#6B5B88;font-weight:700;font-size:1.05em;margin-bottom:10px}
-        .challenge-focus-wrap input[type=text]{width:100%;padding:14px 16px;border:2px solid rgba(176,132,232,.4);border-radius:10px;font-family:inherit;font-size:1.05em;font-weight:600;color:#2a2a2a;background:#fff;transition:all .3s}
-        .visibility-section{background:linear-gradient(135deg,rgba(176,132,232,.08) 0%,rgba(107,163,232,.08) 100%);border:2px solid rgba(176,132,232,.3);border-radius:16px;padding:25px;margin:25px 0}
-        .visibility-section h3{margin-top:0}
-        .vis-field{margin-bottom:18px}
-        .vis-field label{display:block;color:#6B5B88;font-weight:700;font-size:.95em;margin-bottom:8px}
-        .vis-field .hint{color:#9B8BA8;font-size:.85em;font-style:italic;margin-bottom:8px;display:block}
-        .vis-field textarea{min-height:90px}
-        .week-selector{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,rgba(204,255,0,.12) 0%,rgba(176,132,232,.12) 100%);border:2px solid rgba(204,255,0,.35);border-radius:14px;padding:16px 22px;margin-bottom:26px}
-        .week-selector label{color:#6B5B88;font-weight:700;font-size:1em;white-space:nowrap}
-        .week-selector select{padding:10px 16px;border:2px solid rgba(176,132,232,.4);border-radius:10px;font-family:inherit;font-size:1em;font-weight:600;color:#6B5B88;background:#fff;cursor:pointer}
-        .challenge-day-badge{display:inline-block;background:linear-gradient(135deg,#CCFF00 0%,#B0E800 100%);color:#2a2a2a;font-weight:700;font-size:1.15em;padding:10px 28px;border-radius:30px;margin-bottom:6px}
-        .checkin-template-box{background:linear-gradient(135deg,rgba(176,132,232,.08) 0%,rgba(107,163,232,.08) 100%);border:2px solid rgba(176,132,232,.3);border-radius:16px;padding:28px;margin:20px 0;font-family:'Courier New',monospace;font-size:.95em;white-space:pre-wrap;color:#2a2a2a;line-height:1.9}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Visibility By Design System</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Montserrat',sans-serif;background:linear-gradient(135deg,#D4B5F7 0%,#A8D5FF 50%,#8FB8E8 100%);color:#2a2a2a;line-height:1.6;padding:20px;min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 20% 80%,rgba(212,255,0,.12) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(212,181,247,.5) 0%,transparent 50%);pointer-events:none;z-index:0}
+.wrap{max-width:1100px;margin:0 auto;position:relative;z-index:1}
+header{text-align:center;margin-bottom:36px;padding:36px 20px;background:rgba(255,255,255,.95);border-radius:20px;box-shadow:0 8px 32px rgba(200,181,232,.3)}
+h1{background:linear-gradient(135deg,#B084E8,#6BA3E8 50%,#D4B5F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:2.3em;font-weight:700;margin-bottom:8px}
+.tagline{color:#8B7BA8;font-style:italic;font-size:1.05em}
+.accent{color:#8B6BA8;font-weight:700}
+.tabs{display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap;justify-content:center}
+.tab-btn{padding:11px 20px;background:rgba(255,255,255,.9);border:2px solid rgba(200,181,232,.5);border-radius:30px;cursor:pointer;font-size:.9em;font-weight:600;color:#6B5B88;transition:all .3s;font-family:inherit}
+.tab-btn:hover{background:#fff;border-color:#CCFF00;transform:translateY(-2px)}
+.tab-btn.active{background:linear-gradient(135deg,#B084E8,#6BA3E8);color:#fff;border-color:transparent}
+.panel{display:none;background:rgba(255,255,255,.95);padding:32px;border-radius:20px;box-shadow:0 8px 32px rgba(200,181,232,.3);margin-bottom:24px}
+.panel.active{display:block;animation:fi .4s}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+h2{background:linear-gradient(135deg,#B084E8,#6BA3E8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.7em;font-weight:700;margin-bottom:18px}
+h3{color:#7B5FA8;margin:22px 0 12px;font-size:1.2em;font-weight:600}
+label.field-label{display:block;color:#6B5B88;font-weight:700;font-size:.88em;margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em}
+textarea{width:100%;padding:14px;border:2px solid rgba(232,213,242,.5);border-radius:12px;font-family:inherit;font-size:.97em;resize:vertical;min-height:110px;transition:all .3s;background:rgba(255,249,245,.8)}
+textarea:focus{outline:none;border-color:#CCFF00;background:#fff}
+input[type=text],input[type=number],input[type=url],input[type=date]{padding:11px 14px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:.97em;transition:border-color .3s;background:#fff}
+input:focus{outline:none;border-color:#CCFF00}
+btn,button{padding:13px 28px;background:linear-gradient(135deg,#B084E8,#6BA3E8);color:#fff;border:none;border-radius:30px;cursor:pointer;font-size:.95em;font-weight:600;margin:8px 4px;transition:all .3s;font-family:inherit}
+button:hover{transform:translateY(-2px)}
+.btn-lime{background:linear-gradient(135deg,#CCFF00,#9BCC00);color:#2a2a2a}
+.btn-soft{background:rgba(176,132,232,.18);color:#6B5B88}
+.btn-sm{padding:8px 18px;font-size:.84em}
+.save-pill{position:fixed;bottom:26px;right:26px;background:linear-gradient(135deg,#B084E8,#6BA3E8);color:#fff;padding:13px 26px;border-radius:30px;opacity:0;transition:opacity .3s;z-index:1000;font-weight:600;font-size:.9em}
+.save-pill.show{opacity:1}
+/* day nav */
+.day-nav{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(232,213,242,.3),rgba(213,232,247,.3));border-radius:14px;padding:14px 20px;margin-bottom:22px;gap:12px}
+.day-nav-mid{text-align:center;flex:1}
+.day-nav-mid .dn-date{font-weight:700;color:#6B5B88;font-size:1em}
+.day-nav-mid .dn-status{font-size:.78em;color:#8B7BA8;font-style:italic;margin-top:2px}
+.day-nav button{margin:0;padding:9px 18px;font-size:.88em}
+.today-badge{text-align:center;margin-bottom:14px;display:none}
+.today-badge span{background:linear-gradient(135deg,#CCFF00,#B0E800);color:#2a2a2a;font-weight:700;padding:6px 20px;border-radius:30px;font-size:.85em}
+/* number grid */
+.num-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin:14px 0}
+.num-card{background:#fff;border-radius:12px;padding:14px;border:2px solid rgba(232,213,242,.4)}
+.num-card label{display:block;color:#8B7BA8;font-size:.75em;font-weight:700;margin-bottom:6px;text-transform:uppercase}
+.num-card input[type=number]{width:100%;text-align:center;font-size:1.1em;font-weight:700;color:#B084E8;border-radius:8px;padding:9px}
+/* content type pills */
+.type-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.type-pill{padding:5px 13px;border-radius:20px;font-size:.78em;font-weight:700;border:2px solid rgba(176,132,232,.3);background:rgba(176,132,232,.1);color:#6B5B88;cursor:pointer;transition:all .2s}
+.type-pill.sel{background:linear-gradient(135deg,#B084E8,#6BA3E8);color:#fff;border-color:transparent}
+/* section cards */
+.sec{background:linear-gradient(135deg,rgba(176,132,232,.07),rgba(107,163,232,.07));border:2px solid rgba(176,132,232,.2);border-radius:16px;padding:22px;margin:18px 0}
+.sec h3{margin-top:0}
+/* checkin post */
+.post-box{background:linear-gradient(135deg,rgba(176,132,232,.06),rgba(107,163,232,.06));border:2px solid rgba(176,132,232,.25);border-radius:14px;padding:24px;font-family:'Courier New',monospace;font-size:.9em;white-space:pre-wrap;line-height:1.85;color:#2a2a2a;margin:16px 0}
+/* share box */
+.share-box{background:linear-gradient(135deg,rgba(204,255,0,.13),rgba(176,132,232,.13));border:2px solid rgba(204,255,0,.45);border-radius:14px;padding:22px;margin-top:16px}
+.share-box h3{margin-top:0;color:#6B5B88}
+.share-row{display:flex;gap:10px;margin-top:10px}
+.share-row input{flex:1;font-family:monospace;font-size:.78em;color:#2a2a2a;border-radius:10px}
+.share-row button{margin:0;padding:11px 20px;white-space:nowrap}
+/* tracker grid */
+.t-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin:22px 0}
+.t-cell{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:2px solid transparent;transition:all .2s;font-size:.85em}
+.t-cell:hover{transform:translateY(-2px)}
+.t-none{background:#f5f0fa;border-color:rgba(232,213,242,.5);color:#bbb}
+.t-am{background:rgba(176,132,232,.2);border-color:#B084E8;color:#6B5B88}
+.t-pm{background:rgba(107,163,232,.2);border-color:#6BA3E8;color:#6B5B88}
+.t-full{background:rgba(204,255,0,.28);border-color:#CCFF00;color:#2a2a2a}
+/* stat cards */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:20px 0}
+.stat{background:#fff;border-radius:14px;padding:18px;text-align:center;border:2px solid rgba(232,213,242,.4)}
+.stat-n{font-size:2em;font-weight:700;background:linear-gradient(135deg,#B084E8,#6BA3E8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-l{font-size:.75em;color:#8B7BA8;font-weight:600;margin-top:4px}
+/* modal */
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);z-index:2000;align-items:center;justify-content:center;padding:20px}
+.modal-inner{background:#fff;padding:32px;border-radius:20px;max-width:780px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.modal-close{position:absolute;top:14px;right:14px;background:#E8B5C8;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1em;font-family:inherit;font-weight:700;color:#fff}
+.mb{background:#f9f5f0;padding:13px 15px;border-radius:10px;margin-bottom:10px}
+.mb .ml{font-size:.75em;font-weight:700;color:#8B7BA8;margin-bottom:4px;text-transform:uppercase}
+.mb .mv{font-size:.92em;color:#2a2a2a;line-height:1.6;white-space:pre-wrap}
+/* challenge badge */
+.ch-badge{display:inline-block;background:linear-gradient(135deg,#CCFF00,#B0E800);color:#2a2a2a;font-weight:700;font-size:1.1em;padding:9px 26px;border-radius:30px}
+/* info box */
+.info{background:linear-gradient(135deg,rgba(204,255,0,.1),rgba(176,132,232,.1));border:2px solid rgba(204,255,0,.35);border-radius:12px;padding:14px 18px;color:#6B5B88;font-size:.9em;margin:14px 0}
+</style>
 </head>
 <body>
-<div class="container">
-    <header>
-        <h1>Daily Visibility By Design System</h1>
-        <p class="tagline"><span class="accent">Soft life</span>, savage execution</p>
-        <div class="date-display" id="currentDate"></div>
-    </header>
+<div class="wrap">
+<header>
+    <h1>✨ Daily Visibility By Design System ✨</h1>
+    <p class="tagline"><span class="accent">Soft life</span>, savage execution</p>
+    <div id="todayLabel" style="margin-top:14px;color:#6B5B88;font-size:1em;font-weight:600"></div>
+</header>
 
-    <div class="tab-navigation">
-        <button class="tab-btn" onclick="showTab('snapshot',event)">Starting Point</button>
-        <button class="tab-btn" onclick="showTab('weekly',event)">Weekly Overview</button>
-        <button class="tab-btn active" onclick="showTab('morning',event)">Morning Practice</button>
-        <button class="tab-btn" onclick="showTab('during',event)">During Day</button>
-        <button class="tab-btn" onclick="showTab('evening',event)">Evening Debrief</button>
-        <button class="tab-btn" onclick="showTab('checkintemplate',event)">Daily Check-In</button>
-        <button class="tab-btn" onclick="showTab('content',event)">Content Bank</button>
-        <button class="tab-btn" onclick="showTab('checkin',event)">Link Tracker</button>
-        <button class="tab-btn" onclick="showTab('tracker',event)">Progress Tracker</button>
+<div class="tabs">
+    <button class="tab-btn" onclick="go('snap',this)">Starting Point</button>
+    <button class="tab-btn" onclick="go('weekly',this)">Weekly Plan</button>
+    <button class="tab-btn active" onclick="go('morning',this)">Morning</button>
+    <button class="tab-btn" onclick="go('evening',this)">Evening Debrief</button>
+    <button class="tab-btn" onclick="go('checkin',this)">Daily Check-In</button>
+    <button class="tab-btn" onclick="go('content',this)">Content Bank</button>
+    <button class="tab-btn" onclick="go('links',this)">Link Tracker</button>
+    <button class="tab-btn" onclick="go('progress',this)">Progress</button>
+</div>
+
+<!-- ═══════════════ STARTING POINT ═══════════════ -->
+<div id="snap" class="panel">
+    <h2>📸 Starting Point Snapshot</h2>
+    <div class="info">Record your numbers on Day 1. They stay frozen here so you can see your real transformation on Day 28.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:20px 0">
+        <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #B084E8"><label class="field-label">Instagram Followers</label><input type="number" id="sIG" placeholder="0" style="width:100%"></div>
+        <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #6BA3E8"><label class="field-label">TikTok Followers</label><input type="number" id="sTT" placeholder="0" style="width:100%"></div>
+        <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #E8A87C"><label class="field-label">YouTube Subscribers</label><input type="number" id="sYT" placeholder="0" style="width:100%"></div>
+        <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #CCFF00"><label class="field-label">Skool Members</label><input type="number" id="sSK" placeholder="0" style="width:100%"></div>
+        <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #E87CAE"><label class="field-label">MRR ($)</label><input type="number" id="sMRR" placeholder="0" style="width:100%"></div>
+        <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #A8D5E2"><label class="field-label">Email List</label><input type="number" id="sEM" placeholder="0" style="width:100%"></div>
     </div>
+    <label class="field-label">Where are you mentally / energetically as you begin?</label>
+    <textarea id="sNotes" placeholder="Set the baseline for how you're feeling going in..." style="min-height:90px"></textarea>
+    <button onclick="saveSnap()">💾 Save Starting Point</button>
+    <div id="snapMsg" style="display:none;color:#7B3FBE;font-weight:600;margin-top:10px">✓ Saved!</div>
+</div>
 
-    <!-- STARTING POINT -->
-    <div id="snapshot" class="tab-content">
-        <h2>Starting Point Snapshot</h2>
-        <div style="text-align:center;font-style:italic;color:#6B5B88;font-size:1.1em;margin:10px 0 30px;padding:25px;background:linear-gradient(135deg,rgba(232,213,242,.3) 0%,rgba(213,232,247,.3) 100%);border-radius:15px;border:2px solid rgba(204,255,0,.3)">Record where you're starting from. This stays fixed so you can see exactly how far you've come by Day 28.</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px">
-            <div style="background:#fff;padding:24px;border-radius:14px;border-left:4px solid #B084E8"><label style="display:block;color:#6B5B88;font-weight:700;font-size:.95em;margin-bottom:10px">Instagram Followers</label><input type="number" id="snapIG" min="0" placeholder="e.g. 1200" style="width:100%;padding:13px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1.2em;font-weight:700;color:#B084E8;text-align:center;background:rgba(255,249,255,.8)"></div>
-            <div style="background:#fff;padding:24px;border-radius:14px;border-left:4px solid #6BA3E8"><label style="display:block;color:#6B5B88;font-weight:700;font-size:.95em;margin-bottom:10px">TikTok Followers</label><input type="number" id="snapTikTok" min="0" placeholder="e.g. 850" style="width:100%;padding:13px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1.2em;font-weight:700;color:#6BA3E8;text-align:center;background:rgba(249,252,255,.8)"></div>
-            <div style="background:#fff;padding:24px;border-radius:14px;border-left:4px solid #E8A87C"><label style="display:block;color:#6B5B88;font-weight:700;font-size:.95em;margin-bottom:10px">YouTube Subscribers</label><input type="number" id="snapYouTube" min="0" placeholder="e.g. 320" style="width:100%;padding:13px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1.2em;font-weight:700;color:#E8A87C;text-align:center;background:rgba(255,252,249,.8)"></div>
-            <div style="background:#fff;padding:24px;border-radius:14px;border-left:4px solid #CCFF00"><label style="display:block;color:#6B5B88;font-weight:700;font-size:.95em;margin-bottom:10px">Skool Members</label><input type="number" id="snapSkool" min="0" placeholder="e.g. 250" style="width:100%;padding:13px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1.2em;font-weight:700;color:#7B9B00;text-align:center;background:rgba(252,255,245,.8)"></div>
-            <div style="background:#fff;padding:24px;border-radius:14px;border-left:4px solid #E87CAE"><label style="display:block;color:#6B5B88;font-weight:700;font-size:.95em;margin-bottom:10px">Monthly Recurring Revenue ($)</label><input type="number" id="snapMRR" min="0" placeholder="e.g. 900" style="width:100%;padding:13px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1.2em;font-weight:700;color:#E87CAE;text-align:center;background:rgba(255,249,252,.8)"></div>
-            <div style="background:#fff;padding:24px;border-radius:14px;border-left:4px solid #A8D5E2"><label style="display:block;color:#6B5B88;font-weight:700;font-size:.95em;margin-bottom:10px">Email List Size</label><input type="number" id="snapEmail" min="0" placeholder="e.g. 400" style="width:100%;padding:13px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1.2em;font-weight:700;color:#4A9BB5;text-align:center;background:rgba(248,253,255,.8)"></div>
-        </div>
-        <div style="background:#fff;padding:24px;border-radius:14px;border-left:4px solid #D4B5F7;margin-bottom:20px"><label style="display:block;color:#6B5B88;font-weight:700;font-size:.95em;margin-bottom:10px">Anything else to note at the start?</label><textarea id="snapNotes" placeholder="Where are you mentally, energetically, strategically?" style="min-height:100px"></textarea></div>
-        <button onclick="saveSnapshot()">Save My Starting Point</button>
-        <div id="snapshotSavedMsg" style="display:none;margin-top:14px;color:#7B3FBE;font-weight:600">Saved! This data will stay here throughout the challenge.</div>
+<!-- ═══════════════ WEEKLY PLAN ═══════════════ -->
+<div id="weekly" class="panel">
+    <h2>Weekly Plan</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,rgba(232,213,242,.3),rgba(213,232,247,.3));border-radius:12px;padding:14px 20px;margin-bottom:20px">
+        <button onclick="chWeek(-1)" style="margin:0;padding:9px 18px">← Prev</button>
+        <div id="wkLabel" style="font-weight:700;color:#6B5B88;text-align:center"></div>
+        <button onclick="chWeek(1)" style="margin:0;padding:9px 18px">Next →</button>
     </div>
-
-    <!-- WEEKLY OVERVIEW -->
-    <div id="weekly" class="tab-content">
-        <h2>Weekly Overview</h2>
-        <div class="week-selector"><label>Challenge Week:</label>
-            <select id="challengeWeekSelect" onchange="saveChallengeWeek()">
-                <option value="">— Select Week —</option>
-                <option value="Week 1 — Education Phase (Days 1-7)">Week 1 — Education Phase (Days 1–7)</option>
-                <option value="Week 2 — Accountability Phase (Days 8-14)">Week 2 — Accountability Phase (Days 8–14)</option>
-                <option value="Week 3 — Accountability Phase (Days 15-21)">Week 3 — Accountability Phase (Days 15–21)</option>
-                <option value="Week 4 — Final Push (Days 22-28)">Week 4 — Final Push (Days 22–28)</option>
-            </select>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:20px;padding:15px;background:linear-gradient(135deg,rgba(232,213,242,.3),rgba(213,232,247,.3));border-radius:10px">
-            <button onclick="changeWeek(-1)" style="margin:0">Previous</button>
-            <div id="weekDisplay" style="font-weight:600;color:#6B5B88;align-self:center"></div>
-            <button onclick="changeWeek(1)" style="margin:0">Next</button>
-        </div>
-        <h3>The Four Business Activities</h3>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;margin:20px 0">
-            <div style="background:#fff;padding:20px;border-radius:12px;border-left:4px solid #B084E8"><h3 style="margin-top:0;font-size:1.1em">ATTRACT</h3><textarea id="weeklyAttract" placeholder="TikTok posts, Skool discovery posts, YouTube video, IG carousel..."></textarea></div>
-            <div style="background:#fff;padding:20px;border-radius:12px;border-left:4px solid #6BA3E8"><h3 style="margin-top:0;font-size:1.1em">NURTURE</h3><textarea id="weeklyNurture" placeholder="Stories, community comments, DM follow-ups, Skool feed posts..."></textarea></div>
-            <div style="background:#fff;padding:20px;border-radius:12px;border-left:4px solid #E8C48B"><h3 style="margin-top:0;font-size:1.1em">CONVERT</h3><textarea id="weeklyConvert" placeholder="Sales conversations, DM outreach, comment funnels..."></textarea></div>
-            <div style="background:#fff;padding:20px;border-radius:12px;border-left:4px solid #CCFF00"><h3 style="margin-top:0;font-size:1.1em">DELIVER</h3><textarea id="weeklyDeliver" placeholder="Challenge training content, client support, community engagement..."></textarea></div>
-        </div>
-        <h3 style="margin-top:40px">Weekly Reflection</h3>
-        <div style="background:linear-gradient(135deg,rgba(204,255,0,.1),rgba(212,181,247,.1));border:2px solid rgba(204,255,0,.3);border-radius:12px;padding:20px;margin:15px 0"><label style="display:block;color:#6B5B88;font-weight:600;margin-bottom:8px">What went well last week?</label><textarea id="weeklyWentWell" placeholder="Celebrate your wins..." style="min-height:100px"></textarea></div>
-        <div style="background:linear-gradient(135deg,rgba(176,132,232,.1),rgba(107,163,232,.1));border:2px solid rgba(176,132,232,.3);border-radius:12px;padding:20px"><label style="display:block;color:#6B5B88;font-weight:600;margin-bottom:8px">Where do I need a breakthrough?</label><textarea id="weeklyStuck" placeholder="What's unclear? Where do you need guidance?" style="min-height:100px"></textarea></div>
-        <h3 style="margin-top:40px">The Miracle Formula</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0">
-            <div style="background:#fff;border:2px solid #B084E8;border-radius:15px;padding:20px"><h4 style="color:#6B5B88;margin-bottom:8px">100% Spiritual Work</h4><textarea id="miracleSpiritual" placeholder="Post content, create systems..." style="min-height:150px"></textarea></div>
-            <div style="background:#fff;border:2px solid #6BA3E8;border-radius:15px;padding:20px"><h4 style="color:#6B5B88;margin-bottom:8px">100% Physical Work</h4><textarea id="miraclePhysical" placeholder="Tactical work that moves you forward..." style="min-height:150px"></textarea></div>
-            <div style="background:#fff;border:2px solid #CCFF00;border-radius:15px;padding:20px"><h4 style="color:#6B5B88;margin-bottom:8px">Certainty</h4><textarea id="miracleCertainty" placeholder="How is this challenge helping you become capable?" style="min-height:150px"></textarea></div>
-            <div style="background:#fff;border:2px solid #E8C48B;border-radius:15px;padding:20px"><h4 style="color:#6B5B88;margin-bottom:8px">Prayer</h4><div style="background:rgba(232,213,242,.2);padding:12px;border-radius:8px;margin-bottom:12px;font-style:italic;color:#6B5B88;font-size:.95em">"Help me see clearly, act with purpose, and receive Your light with gratitude."</div><textarea id="miraclePrayer" placeholder="Your personal prayer for this week..." style="min-height:100px"></textarea></div>
-        </div>
+    <div style="background:linear-gradient(135deg,rgba(204,255,0,.1),rgba(176,132,232,.1));border:2px solid rgba(204,255,0,.3);border-radius:12px;padding:18px;margin-bottom:20px">
+        <label class="field-label">This week's challenge phase / focus</label>
+        <select id="wkPhase" onchange="saveWeekly()" style="width:100%;padding:11px;border:2px solid rgba(176,132,232,.3);border-radius:10px;font-family:inherit;font-size:.97em;background:#fff;color:#2a2a2a">
+            <option value="">— Select —</option>
+            <option>Week 1 — Education Phase (Days 1–7)</option>
+            <option>Week 2 — Accountability Phase (Days 8–14)</option>
+            <option>Week 3 — Accountability Phase (Days 15–21)</option>
+            <option>Week 4 — Final Push (Days 22–28)</option>
+        </select>
     </div>
-
-    <!-- MORNING PRACTICE -->
-    <div id="morning" class="tab-content active">
-        <h2>Morning Practice (5-10 min)</h2>
-        <div class="day-nav">
-            <button onclick="changeMorningDate(-1)">Previous Day</button>
-            <div class="day-nav-label"><span id="morningDateDisplay"></span><span class="day-sub" id="morningDayStatus"></span></div>
-            <button onclick="changeMorningDate(1)">Next Day</button>
-        </div>
-        <div id="morningTodayBadge" style="display:none;text-align:center;margin-bottom:16px"><span style="background:linear-gradient(135deg,#CCFF00,#B0E800);color:#2a2a2a;font-weight:700;padding:8px 22px;border-radius:30px;font-size:.9em">Today</span></div>
-        <div class="challenge-focus-wrap"><label>Today's Challenge Focus</label><input type="text" id="challengeFocus" placeholder="e.g. Day 3 — YouTube Visibility"></div>
-        <h3>1. Brain Dump (2 min)</h3>
-        <p>Write EVERYTHING you think you need to do. Get it out of your head.</p>
-        <textarea id="brainDump" placeholder="Everything on your mind..."></textarea>
-        <div style="background:linear-gradient(135deg,rgba(232,213,242,.3),rgba(213,232,247,.3));padding:25px;border-radius:15px;margin:20px 0;border-left:4px solid #CCFF00">
-            <h3 style="margin-top:0">2. Connect with Your Higher Self (1 min)</h3>
-            <p style="color:#6B5B88;font-style:italic">"What do WE focus on today?" Touch your token. Read your letter. Feel into her.</p>
-        </div>
-        <h3>3. Energy-Based Sorting (3 min)</h3>
-        <div style="background:linear-gradient(135deg,rgba(204,255,0,.15),rgba(212,181,247,.15));border:2px solid #CCFF00;border-radius:15px;padding:20px;margin:20px 0">
-            <h4 style="color:#6B5B88">What has clear energy behind it?</h4>
-            <p style="color:#7B5FA8;font-size:.95em;font-style:italic;margin-bottom:12px">Your YES. This feels aligned, exciting, or easeful.</p>
-            <textarea id="energyYes" placeholder="What wants to happen today? What feels like a clear yes?"></textarea>
-        </div>
-        <h3>4. Find Synergy (2 min)</h3>
-        <textarea id="synergy" placeholder="How can one action serve multiple purposes?"></textarea>
-        <h3>5. Top 3 Focus Tasks</h3>
-        <div style="background:linear-gradient(135deg,rgba(232,213,242,.2),rgba(213,232,247,.2));padding:25px;border-radius:15px;border:2px solid rgba(204,255,0,.3)">
-            <div style="display:flex;align-items:center;margin:12px 0;gap:12px"><input type="checkbox" id="task1-check" style="width:24px;height:24px;accent-color:#CCFF00"><input type="text" id="task1" placeholder="Focus task #1" style="flex:1;padding:14px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit"></div>
-            <div style="display:flex;align-items:center;margin:12px 0;gap:12px"><input type="checkbox" id="task2-check" style="width:24px;height:24px;accent-color:#CCFF00"><input type="text" id="task2" placeholder="Focus task #2" style="flex:1;padding:14px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit"></div>
-            <div style="display:flex;align-items:center;margin:12px 0;gap:12px"><input type="checkbox" id="task3-check" style="width:24px;height:24px;accent-color:#CCFF00"><input type="text" id="task3" placeholder="Focus task #3" style="flex:1;padding:14px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit"></div>
-        </div>
-        <button onclick="completeMorning()">Complete Morning Practice</button>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:20px">
+        <div style="background:#fff;padding:18px;border-radius:12px;border-left:4px solid #B084E8"><h3 style="margin-top:0;font-size:1em">ATTRACT</h3><textarea id="wkA" placeholder="TikTok posts, Skool discovery, YouTube, IG reels..." style="min-height:100px"></textarea></div>
+        <div style="background:#fff;padding:18px;border-radius:12px;border-left:4px solid #6BA3E8"><h3 style="margin-top:0;font-size:1em">NURTURE</h3><textarea id="wkN" placeholder="Stories, comments, DM follow-ups, community posts..." style="min-height:100px"></textarea></div>
+        <div style="background:#fff;padding:18px;border-radius:12px;border-left:4px solid #E8C48B"><h3 style="margin-top:0;font-size:1em">CONVERT</h3><textarea id="wkC" placeholder="Sales conversations, DM outreach, comment funnels..." style="min-height:100px"></textarea></div>
+        <div style="background:#fff;padding:18px;border-radius:12px;border-left:4px solid #CCFF00"><h3 style="margin-top:0;font-size:1em">DELIVER</h3><textarea id="wkD" placeholder="Challenge trainings, client support, community..." style="min-height:100px"></textarea></div>
     </div>
-
-    <!-- DURING DAY -->
-    <div id="during" class="tab-content">
-        <h2>During Your Day</h2>
-        <div id="timeEntries"></div>
-        <button onclick="addTimeEntry()">+ Add Time Entry</button>
-        <h3 style="margin-top:30px">Course Correction Notes</h3>
-        <textarea id="courseCorrection" placeholder="Notes on staying on track..."></textarea>
+    <div class="sec">
+        <h3>Weekly Reflection</h3>
+        <label class="field-label" style="margin-top:0">What went well last week?</label>
+        <textarea id="wkWW" placeholder="Celebrate every win..." style="min-height:90px;margin-bottom:14px"></textarea>
+        <label class="field-label">Where do I need a breakthrough this week?</label>
+        <textarea id="wkSt" placeholder="What's unclear? What do you need?" style="min-height:90px"></textarea>
     </div>
-
-    <!-- EVENING DEBRIEF -->
-    <div id="evening" class="tab-content">
-        <h2>Evening Debrief (5-10 min)</h2>
-        <div class="day-nav">
-            <button onclick="changeDebriefDate(-1)">Previous Day</button>
-            <div class="day-nav-label"><span id="debriefDateDisplay"></span><span class="day-sub" id="debriefDayStatus"></span></div>
-            <button onclick="changeDebriefDate(1)">Next Day</button>
-        </div>
-        <div id="eveningTodayBadge" style="display:none;text-align:center;margin-bottom:16px"><span style="background:linear-gradient(135deg,#CCFF00,#B0E800);color:#2a2a2a;font-weight:700;padding:8px 22px;border-radius:30px;font-size:.9em">Today</span></div>
-        <div style="background:linear-gradient(135deg,rgba(204,255,0,.1),rgba(176,132,232,.1));border:2px solid rgba(204,255,0,.4);border-radius:16px;padding:25px;margin-bottom:30px">
-            <h3 style="margin-top:0;color:#6B5B88">Today's Numbers</h3>
-            <div class="numbers-grid">
-                <div class="number-field"><label>IG Posts</label><input type="number" id="numIGPosts" min="0" placeholder="0" onchange="saveDebriefData()"></div>
-                <div class="number-field"><label>Stories</label><input type="number" id="numStories" min="0" placeholder="0" onchange="saveDebriefData()"></div>
-                <div class="number-field"><label>TikToks</label><input type="number" id="numTikToks" min="0" placeholder="0" onchange="saveDebriefData()"></div>
-                <div class="number-field"><label>YouTube</label><input type="number" id="numYouTube" min="0" placeholder="0" onchange="saveDebriefData()"></div>
-                <div class="number-field"><label>Skool Posts</label><input type="number" id="numSkoolPosts" min="0" placeholder="0" onchange="saveDebriefData()"></div>
-                <div class="number-field"><label>Comments</label><input type="number" id="numComments" min="0" placeholder="0" onchange="saveDebriefData()"></div>
-                <div class="number-field"><label>DMs Sent</label><input type="number" id="numDMs" min="0" placeholder="0" onchange="saveDebriefData()"></div>
-            </div>
-        </div>
-        <div style="margin:25px 0"><label style="display:block;color:#6B5B88;font-weight:600;margin-bottom:8px;font-size:1.05em">What went well or what did I accomplish today?</label><textarea id="wentWell" placeholder="Celebrate every win, big and small..."></textarea></div>
-        <div style="margin:25px 0"><label style="display:block;color:#6B5B88;font-weight:600;margin-bottom:8px;font-size:1.05em">What didn't go well?</label><textarea id="didntGoWell" placeholder="No judgment, just observation..."></textarea></div>
-        <div style="margin:25px 0"><label style="display:block;color:#6B5B88;font-weight:600;margin-bottom:8px;font-size:1.05em">What didn't get done today?</label><textarea id="patterns" placeholder="Tasks that didn't get done today..."></textarea></div>
-        <div class="visibility-section">
-            <h3>Today's Visibility Insights</h3>
-            <p style="color:#8B7BA8;font-size:.9em;font-style:italic;margin-bottom:20px">These reflections feed directly into your Content Bank.</p>
-            <div class="vis-field"><label>How did being visible feel today?</label><span class="hint">Energised, uncomfortable, expansive, scary, exciting… be honest.</span><textarea id="visFelt" placeholder="Being visible today felt like..."></textarea></div>
-            <div class="vis-field"><label>Any resistance that came up?</label><span class="hint">Did anything stop you from posting, showing up, or putting yourself out there?</span><textarea id="visResistance" placeholder="I noticed resistance around..."></textarea></div>
-            <div class="vis-field"><label>Any conditioning or old stories showing up?</label><span class="hint">Thoughts like "who am I to…" / "nobody cares" / "I need to look perfect first"</span><textarea id="visConditioning" placeholder="The old story that surfaced was..."></textarea></div>
-            <div class="vis-field"><label>What are you noticing about visibility?</label><span class="hint">Patterns, shifts, surprises, what's getting easier, what's still hard.</span><textarea id="visNoticing" placeholder="Something I'm noticing about visibility is..."></textarea></div>
-            <div class="vis-field"><label>Any insights, downloads, or breakthroughs?</label><span class="hint">Things you realised about yourself, your audience, your message, or your business.</span><textarea id="visInsights" placeholder="A breakthrough or insight I had today..."></textarea></div>
-        </div>
-        <div style="margin:25px 0"><label style="display:block;color:#6B5B88;font-weight:600;margin-bottom:8px;font-size:1.05em">Additional content ideas from today</label><textarea id="contentIdeas" placeholder="Other hooks, topics, or stories worth capturing..."></textarea></div>
-        <button onclick="completeEvening()">Complete Evening Debrief</button>
-    </div>
-
-    <!-- DAILY CHECK-IN TEMPLATE -->
-    <div id="checkintemplate" class="tab-content">
-        <h2>Daily Check-In Post</h2>
-        <div style="background:linear-gradient(135deg,rgba(204,255,0,.12),rgba(176,132,232,.12));border:2px solid rgba(204,255,0,.35);border-radius:12px;padding:18px 22px;margin-bottom:28px">
-            <p style="color:#6B5B88;margin:0;font-size:.95em">Fill in your numbers below and copy the formatted post to paste in the Skool daily check-in thread along with a screenshot of your Daily Design System.</p>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:28px">
-            <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #B084E8">
-                <label style="display:block;color:#6B5B88;font-weight:700;font-size:.9em;margin-bottom:6px">Visitors</label>
-                <div style="display:flex;gap:8px">
-                    <input type="number" id="ci_visitors" placeholder="Number" style="flex:1;padding:11px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1em">
-                    <select id="ci_visitors_dir" style="padding:11px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1em;background:#fff;color:#6B5B88">
-                        <option value="up">Up</option>
-                        <option value="down">Down</option>
-                        <option value="same">Same</option>
-                    </select>
-                </div>
-            </div>
-            <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #6BA3E8">
-                <label style="display:block;color:#6B5B88;font-weight:700;font-size:.9em;margin-bottom:6px">Conversion Rate</label>
-                <div style="display:flex;gap:8px">
-                    <input type="number" id="ci_conversion" placeholder="%" step="0.1" style="flex:1;padding:11px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1em">
-                    <select id="ci_conversion_dir" style="padding:11px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1em;background:#fff;color:#6B5B88">
-                        <option value="up">Up</option>
-                        <option value="down">Down</option>
-                        <option value="same">Same</option>
-                    </select>
-                </div>
-            </div>
-            <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #E8C48B">
-                <label style="display:block;color:#6B5B88;font-weight:700;font-size:.9em;margin-bottom:6px">Content Published / Ad Spend ($)</label>
-                <div style="display:flex;gap:8px">
-                    <input type="text" id="ci_content_count" placeholder="# or $amount" style="flex:1;padding:11px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1em">
-                    <select id="ci_content_dir" style="padding:11px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1em;background:#fff;color:#6B5B88">
-                        <option value="up">Up</option>
-                        <option value="down">Down</option>
-                        <option value="same">Same</option>
-                    </select>
-                </div>
-            </div>
-            <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #CCFF00">
-                <label style="display:block;color:#6B5B88;font-weight:700;font-size:.9em;margin-bottom:6px">Link to Content</label>
-                <input type="url" id="ci_content_link" placeholder="https://..." style="width:100%;padding:11px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1em">
-                <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px" id="contentTypeButtons"></div>
-            </div>
-            <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #A8D5E2">
-                <label style="display:block;color:#6B5B88;font-weight:700;font-size:.9em;margin-bottom:6px">Profile Activity</label>
-                <div style="display:flex;gap:8px">
-                    <input type="number" id="ci_profile" placeholder="Number" style="flex:1;padding:11px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1em">
-                    <select id="ci_profile_dir" style="padding:11px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1em;background:#fff;color:#6B5B88">
-                        <option value="up">Up</option>
-                        <option value="down">Down</option>
-                        <option value="same">Same</option>
-                    </select>
-                </div>
-            </div>
-            <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #E87CAE">
-                <label style="display:block;color:#6B5B88;font-weight:700;font-size:.9em;margin-bottom:6px">Members</label>
-                <div style="display:flex;gap:8px">
-                    <input type="number" id="ci_members" placeholder="Number" style="flex:1;padding:11px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1em">
-                    <select id="ci_members_dir" style="padding:11px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1em;background:#fff;color:#6B5B88">
-                        <option value="up">Up</option>
-                        <option value="down">Down</option>
-                        <option value="same">Same</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #D4B5F7;margin-bottom:28px">
-            <label style="display:block;color:#6B5B88;font-weight:700;font-size:.9em;margin-bottom:6px">One thing I'm realizing or one question I have about visibility</label>
-            <textarea id="ci_insight" placeholder="Share your insight or ask your question..." style="min-height:90px"></textarea>
-        </div>
-        <div style="background:#fff;padding:20px;border-radius:14px;border-left:4px solid #B084E8;margin-bottom:20px">
-            <label style="display:block;color:#6B5B88;font-weight:700;font-size:.9em;margin-bottom:6px">Link to your Daily Design System</label>
-            <p style="color:#8B7BA8;font-size:.85em;font-style:italic;margin-bottom:10px">Export your data and share the file, or paste a hosted link so Amanda can review your filled-out system.</p>
-            <input type="url" id="ci_dds_link" placeholder="https://..." style="width:100%;padding:11px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit;font-size:1em">
-        </div>
-        <button onclick="generateCheckinPost()">Generate My Check-In Post</button>
-        <div id="checkinPostOutput" style="display:none;margin-top:24px">
-            <h3>Your Check-In Post</h3>
-            <div class="checkin-template-box" id="checkinPostText"></div>
-            <button onclick="copyCheckinPost()">Copy Post</button>
-            <div id="copiedMsg" style="display:none;margin-top:8px;color:#7B3FBE;font-weight:600">Copied to clipboard!</div>
-        </div>
-    </div>
-
-    <!-- CONTENT BANK -->
-    <div id="content" class="tab-content">
-        <h2>Content Bank</h2>
-        <div style="text-align:center;font-style:italic;color:#6B5B88;font-size:1.2em;margin:20px 0 24px;padding:24px;background:linear-gradient(135deg,rgba(232,213,242,.3),rgba(213,232,247,.3));border-radius:15px;border:2px solid rgba(204,255,0,.3)">"Your daily experience IS your content."</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
-            <button onclick="setContentFilter('all')" id="cf-all" style="margin:0;padding:10px 20px;font-size:.9em">All</button>
-            <button onclick="setContentFilter('insights')" id="cf-insights" style="margin:0;padding:10px 20px;font-size:.9em;background:linear-gradient(135deg,#B084E8,#6BA3E8)">Insights</button>
-            <button onclick="setContentFilter('resistance')" id="cf-resistance" style="margin:0;padding:10px 20px;font-size:.9em;background:linear-gradient(135deg,#E87CAE,#E8A87C)">Resistance</button>
-            <button onclick="setContentFilter('other')" id="cf-other" style="margin:0;padding:10px 20px;font-size:.9em;background:linear-gradient(135deg,#6BA3E8,#A8D5E2)">Other Ideas</button>
-        </div>
-        <div id="contentBankList"></div>
-        <button onclick="exportContentIdeas()" style="background:linear-gradient(135deg,#E8C48B,#E8B5C8)">Export Content Ideas</button>
-    </div>
-
-    <!-- LINK TRACKER -->
-    <div id="checkin" class="tab-content">
-        <h2>Link Tracker</h2>
-        <div style="background:linear-gradient(135deg,rgba(204,255,0,.12),rgba(176,132,232,.12));border:2px solid rgba(204,255,0,.35);border-radius:12px;padding:16px 22px;margin-bottom:28px">
-            <p style="color:#6B5B88;margin:0;font-size:.95em">After posting your check-in in Skool, paste your comment link + your Daily Design System link here for each day.</p>
-        </div>
-        <div id="checkinList"></div>
-    </div>
-
-    <!-- PROGRESS TRACKER -->
-    <div id="tracker" class="tab-content">
-        <h2>Progress Tracker</h2>
-        <div style="text-align:center;margin-bottom:30px;padding:24px;background:linear-gradient(135deg,rgba(204,255,0,.15),rgba(176,132,232,.15));border:2px solid rgba(204,255,0,.4);border-radius:18px">
-            <div class="challenge-day-badge" id="challengeDayBadge">Challenge Day — of 28</div>
-            <div style="margin-top:10px"><span style="color:#8B7BA8;font-size:.92em;font-style:italic" id="challengePhaseLabel"></span></div>
-            <div style="margin-top:16px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap">
-                <label style="color:#6B5B88;font-weight:600;font-size:.95em">Challenge start date:</label>
-                <input type="date" id="challengeStartDate" onchange="saveChallengeStart()" style="padding:9px 14px;border:2px solid rgba(176,132,232,.4);border-radius:10px;font-family:inherit;font-size:.95em;color:#2a2a2a">
-            </div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin:30px 0">
-            <div style="background:linear-gradient(135deg,rgba(232,213,242,.3),rgba(213,232,247,.3));padding:30px;border-radius:15px;text-align:center;border:2px solid rgba(232,213,242,.5)"><div id="currentStreak" style="font-size:3em;background:linear-gradient(135deg,#B084E8,#6BA3E8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700">0</div><div style="color:#6B5B88;margin-top:10px;font-weight:600">Current Streak</div></div>
-            <div style="background:linear-gradient(135deg,rgba(232,213,242,.3),rgba(213,232,247,.3));padding:30px;border-radius:15px;text-align:center;border:2px solid rgba(232,213,242,.5)"><div id="totalDays" style="font-size:3em;background:linear-gradient(135deg,#B084E8,#6BA3E8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700">0</div><div style="color:#6B5B88;margin-top:10px;font-weight:600">Total Days Practiced</div></div>
-            <div style="background:linear-gradient(135deg,rgba(232,213,242,.3),rgba(213,232,247,.3));padding:30px;border-radius:15px;text-align:center;border:2px solid rgba(232,213,242,.5)"><div id="completionRate" style="font-size:3em;background:linear-gradient(135deg,#B084E8,#6BA3E8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700">0%</div><div style="color:#6B5B88;margin-top:10px;font-weight:600">Completion Rate</div></div>
-        </div>
-        <h3>Daily Practice Log</h3>
-        <div id="trackerGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:12px;margin:30px 0"></div>
-        <button onclick="exportData()">Export My Data</button>
-        <button onclick="generateShareLink()" style="background:linear-gradient(135deg,#CCFF00,#7BB800);color:#2a2a2a">Submit to Amanda</button>
-        <button onclick="clearAllData()" style="background:linear-gradient(135deg,#E8B5C8,#E8C8B5)">Clear All Data</button>
-        <div id="shareLinkBox" style="display:none;margin-top:20px;background:linear-gradient(135deg,rgba(204,255,0,.15),rgba(176,132,232,.15));border:2px solid rgba(204,255,0,.5);border-radius:16px;padding:24px">
-            <h3 style="color:#6B5B88;margin-top:0">Your Submission Link</h3>
-            <p style="color:#8B7BA8;font-size:.9em;margin-bottom:14px">Copy this link and paste it into the Skool check-in thread or Google Form. Amanda will use it to review your full 28 days.</p>
-            <div style="display:flex;gap:10px;align-items:stretch">
-                <input type="text" id="shareLinkInput" readonly style="flex:1;padding:12px 14px;border:2px solid rgba(176,132,232,.4);border-radius:10px;font-family:monospace;font-size:.8em;background:#fff;color:#2a2a2a">
-                <button onclick="copyShareLink()" style="margin:0;white-space:nowrap">Copy Link</button>
-            </div>
-            <div id="shareCopiedMsg" style="display:none;margin-top:10px;color:#7B3FBE;font-weight:600;font-size:.9em">Copied! Paste it into Skool or your submission form.</div>
-            <p style="color:#9B8BA8;font-size:.78em;font-style:italic;margin-top:12px;margin-bottom:0">Note: this link contains all your data. Only share it with Amanda.</p>
-        </div>
-    </div>
-
-    <div class="save-notice" id="saveNotice">Saved</div>
-
-    <div id="dayModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:2000;align-items:center;justify-content:center;padding:20px">
-        <div style="background:#fff;padding:35px;border-radius:20px;max-width:900px;max-height:90vh;overflow-y:auto;position:relative">
-            <button onclick="closeModal()" style="position:absolute;top:15px;right:15px;background:#E8B5C8;width:35px;height:35px;border-radius:50%;font-size:1.2em;padding:0;margin:0">x</button>
-            <div id="modalContent"></div>
+    <div class="sec">
+        <h3>The Miracle Formula</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div><label class="field-label">100% Spiritual Work</label><textarea id="wkMS" placeholder="Be proactive — post, create, systemize..." style="min-height:120px"></textarea></div>
+            <div><label class="field-label">100% Physical Work</label><textarea id="wkMP" placeholder="Tactical aligned action..." style="min-height:120px"></textarea></div>
+            <div><label class="field-label">Certainty</label><textarea id="wkMC" placeholder="How is this challenge preparing you?" style="min-height:120px"></textarea></div>
+            <div><label class="field-label">Prayer</label><div style="background:rgba(232,213,242,.2);padding:10px 12px;border-radius:8px;margin-bottom:8px;font-style:italic;color:#6B5B88;font-size:.88em">"Help me see clearly, act with purpose, and receive Your light with gratitude."</div><textarea id="wkMPr" placeholder="Your personal prayer this week..." style="min-height:80px"></textarea></div>
         </div>
     </div>
 </div>
 
+<!-- ═══════════════ MORNING ═══════════════ -->
+<div id="morning" class="panel active">
+    <h2>Morning Practice (5–10 min)</h2>
+    <div class="day-nav">
+        <button onclick="chDay('morning',-1)">← Prev</button>
+        <div class="day-nav-mid"><div class="dn-date" id="mDate"></div><div class="dn-status" id="mStatus"></div></div>
+        <button onclick="chDay('morning',1)">Next →</button>
+    </div>
+    <div class="today-badge" id="mTodayBadge"><span>Today</span></div>
+    <div style="background:linear-gradient(135deg,rgba(204,255,0,.13),rgba(176,132,232,.13));border:2px solid rgba(204,255,0,.4);border-radius:14px;padding:20px;margin-bottom:22px">
+        <label class="field-label">Today's challenge focus</label>
+        <input type="text" id="mFocus" placeholder="e.g. Day 5 — YouTube visibility" style="width:100%">
+    </div>
+    <div class="sec">
+        <h3 style="margin-top:0">1. Brain Dump (2 min)</h3>
+        <p style="color:#8B7BA8;font-size:.9em;margin-bottom:10px">Get everything out of your head — tasks, worries, ideas, all of it.</p>
+        <textarea id="mDump" placeholder="Everything on your mind right now..."></textarea>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(232,213,242,.25),rgba(213,232,247,.25));padding:20px;border-radius:14px;border-left:4px solid #CCFF00;margin:18px 0">
+        <h3 style="margin-top:0">2. Connect with Your Higher Self (1 min)</h3>
+        <p style="color:#6B5B88;font-style:italic;margin:0">"What do WE focus on today?" &nbsp;·&nbsp; Touch your token &nbsp;·&nbsp; Read your letter &nbsp;·&nbsp; Feel into her.</p>
+    </div>
+    <div class="sec">
+        <h3 style="margin-top:0">3. What has clear energy today? (3 min)</h3>
+        <p style="color:#8B7BA8;font-size:.9em;margin-bottom:10px">From your brain dump — what feels like a clear YES? What's aligned, exciting, or easeful?</p>
+        <textarea id="mEnergy" placeholder="The things that feel alive and ready to happen..."></textarea>
+    </div>
+    <div class="sec">
+        <h3 style="margin-top:0">4. Top 3 Focus Tasks</h3>
+        <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:12px"><input type="checkbox" id="t1c" style="width:22px;height:22px;accent-color:#CCFF00"><input type="text" id="t1" placeholder="Focus task #1" style="flex:1"></div>
+            <div style="display:flex;align-items:center;gap:12px"><input type="checkbox" id="t2c" style="width:22px;height:22px;accent-color:#CCFF00"><input type="text" id="t2" placeholder="Focus task #2" style="flex:1"></div>
+            <div style="display:flex;align-items:center;gap:12px"><input type="checkbox" id="t3c" style="width:22px;height:22px;accent-color:#CCFF00"><input type="text" id="t3" placeholder="Focus task #3" style="flex:1"></div>
+        </div>
+    </div>
+    <button onclick="completeMorning()">✓ Complete Morning Practice</button>
+</div>
+
+<!-- ═══════════════ EVENING DEBRIEF ═══════════════ -->
+<div id="evening" class="panel">
+    <h2>Evening Debrief (5–10 min)</h2>
+    <div class="day-nav">
+        <button onclick="chDay('evening',-1)">← Prev</button>
+        <div class="day-nav-mid"><div class="dn-date" id="eDate"></div><div class="dn-status" id="eStatus"></div></div>
+        <button onclick="chDay('evening',1)">Next →</button>
+    </div>
+    <div class="today-badge" id="eTodayBadge"><span>Today</span></div>
+
+    <!-- NUMBERS -->
+    <div class="sec">
+        <h3 style="margin-top:0">📊 Today's Numbers</h3>
+        <p style="color:#8B7BA8;font-size:.85em;margin-bottom:16px">These will auto-populate your morning check-in post tomorrow.</p>
+
+        <label class="field-label" style="color:#B084E8">📊 Skool Group Stats <span style="font-weight:400;text-transform:none;font-size:.85em;color:#8B7BA8">(from your Skool group analytics)</span></label>
+        <div class="num-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
+            <div class="num-card" style="border-left:3px solid #B084E8"><label>Visitors</label><input type="number" id="eVisitors" min="0" placeholder="0" onchange="saveEvening()"><div style="margin-top:6px"><select id="eVisitorsDir" onchange="saveEvening()" style="width:100%;padding:6px;border:1px solid rgba(232,213,242,.6);border-radius:6px;font-family:inherit;font-size:.82em;background:#fff;color:#6B5B88"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div></div>
+            <div class="num-card" style="border-left:3px solid #B084E8"><label>Conversion Rate %</label><input type="number" id="eConv" min="0" step="0.1" placeholder="0" onchange="saveEvening()"><div style="margin-top:6px"><select id="eConvDir" onchange="saveEvening()" style="width:100%;padding:6px;border:1px solid rgba(232,213,242,.6);border-radius:6px;font-family:inherit;font-size:.82em;background:#fff;color:#6B5B88"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div></div>
+            <div class="num-card" style="border-left:3px solid #B084E8"><label>Members</label><input type="number" id="eMembers" min="0" placeholder="0" onchange="saveEvening()"><div style="margin-top:6px"><select id="eMembersDir" onchange="saveEvening()" style="width:100%;padding:6px;border:1px solid rgba(232,213,242,.6);border-radius:6px;font-family:inherit;font-size:.82em;background:#fff;color:#6B5B88"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div></div>
+        </div>
+
+        <label class="field-label" style="margin-top:18px;color:#6BA3E8">🤝 Group Engagement <span style="font-weight:400;text-transform:none;font-size:.85em;color:#8B7BA8">(activity inside your Skool community)</span></label>
+        <div class="num-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
+            <div class="num-card" style="border-left:3px solid #6BA3E8"><label>New Posts</label><input type="number" id="eGroupPosts" min="0" placeholder="0" onchange="saveEvening()"></div>
+            <div class="num-card" style="border-left:3px solid #6BA3E8"><label>New Comments</label><input type="number" id="eGroupComments" min="0" placeholder="0" onchange="saveEvening()"></div>
+            <div class="num-card" style="border-left:3px solid #6BA3E8"><label>New Likes</label><input type="number" id="eGroupLikes" min="0" placeholder="0" onchange="saveEvening()"></div>
+        </div>
+
+        <label class="field-label" style="margin-top:18px;color:#E8A87C">👤 Your Profile Activity <span style="font-weight:400;text-transform:none;font-size:.85em;color:#8B7BA8">(your personal Skool profile stats)</span></label>
+        <div class="num-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
+            <div class="num-card" style="border-left:3px solid #E8A87C"><label>Profile Activity Score</label><input type="number" id="eProfile" min="0" placeholder="0" onchange="saveEvening()"><div style="margin-top:6px"><select id="eProfileDir" onchange="saveEvening()" style="width:100%;padding:6px;border:1px solid rgba(232,213,242,.6);border-radius:6px;font-family:inherit;font-size:.82em;background:#fff;color:#6B5B88"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div></div>
+        </div>
+
+        <label class="field-label" style="margin-top:18px">Content Published</label>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px">
+            <div class="num-card"><label>Pieces Published</label><input type="number" id="eContentNum" min="0" placeholder="0" onchange="saveEvening()"></div>
+            <div class="num-card" style="grid-column:span 2">
+                <label>Link to Content</label>
+                <input type="url" id="eContentLink" placeholder="https://..." style="width:100%" onchange="saveEvening()">
+                <div class="type-pills" id="contentTypePills"></div>
+            </div>
+        </div>
+        <div class="num-grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">
+            <div class="num-card"><label>DMs Sent</label><input type="number" id="eDMs" min="0" placeholder="0" onchange="saveEvening()"></div>
+            <div class="num-card"><label>Comments Left</label><input type="number" id="eComments" min="0" placeholder="0" onchange="saveEvening()"></div>
+        </div>
+
+        <label class="field-label" style="margin-top:18px">Ads</label>
+        <div class="num-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
+            <div class="num-card"><label>Ad Spend ($)</label><input type="number" id="eAdSpend" min="0" step="0.01" placeholder="0.00" onchange="saveEvening()"></div>
+            <div class="num-card"><label>New Ads Launched</label><input type="number" id="eNewAds" min="0" placeholder="0" onchange="saveEvening()"></div>
+        </div>
+    </div>
+
+    <!-- WINS -->
+    <div class="sec">
+        <h3 style="margin-top:0">🏆 Wins — What moved today?</h3>
+        <p style="color:#8B7BA8;font-size:.88em;margin-bottom:10px">Every action counts. Celebrate it all.</p>
+        <textarea id="eWins" placeholder="What did you do, create, send, publish, or show up for today?"></textarea>
+    </div>
+
+    <!-- CARRY FORWARD -->
+    <div class="sec">
+        <h3 style="margin-top:0">🔁 What didn't happen — carry forward?</h3>
+        <p style="color:#8B7BA8;font-size:.88em;margin-bottom:10px">No judgment. What goes on tomorrow's brain dump?</p>
+        <textarea id="eCarry" placeholder="Tasks or intentions that didn't get done today..."></textarea>
+    </div>
+
+    <!-- VISIBILITY REFLECTION -->
+    <div class="sec" style="border-color:rgba(176,132,232,.35)">
+        <h3 style="margin-top:0">👁 Visibility Reflection</h3>
+        <div class="info" style="margin-top:0;margin-bottom:14px">Answer whatever resonates — one sentence or a full download. You can also drop a <strong>Loom link</strong> below if it's easier to think out loud.</div>
+        <div style="background:rgba(248,245,255,.7);border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:.88em;color:#6B5B88;line-height:1.9">
+            <strong style="color:#7B5FA8">Prompts to consider:</strong><br>
+            · How did being visible feel today?<br>
+            · Any resistance or old stories that came up?<br>
+            · What are you noticing about showing up consistently?<br>
+            · Any insights, downloads, or breakthroughs?<br>
+            · What's getting easier — and what's still hard?
+        </div>
+        <textarea id="eReflection" placeholder="Write your reflection here — or paste a Loom link and add a quick note..." style="min-height:140px"></textarea>
+    </div>
+
+    <button onclick="completeEvening()">✓ Complete Evening Debrief</button>
+</div>
+
+<!-- ═══════════════ DAILY CHECK-IN ═══════════════ -->
+<div id="checkin" class="panel">
+    <h2>Daily Check-In Post</h2>
+    <div class="info">
+        This post is generated from <strong>yesterday's Evening Debrief</strong>. It's short by design — just your key stats, your content link, and one visibility insight. Post it in the Skool daily check-in thread each morning with a <strong>screenshot of your Skool analytics</strong> and your <strong>Daily Visibility System link</strong>.
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(204,255,0,.1),rgba(176,132,232,.1));border:2px solid rgba(204,255,0,.35);border-radius:12px;padding:16px 20px;margin:16px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <label style="color:#6B5B88;font-weight:700;font-size:.9em;white-space:nowrap">Pulling data from:</label>
+        <div style="display:flex;align-items:center;gap:10px">
+            <button onclick="chCheckinDate(-1)" style="margin:0;padding:7px 14px;font-size:.82em">← Prev</button>
+            <span id="ciDateLabel" style="font-weight:700;color:#2a2a2a;font-size:.95em"></span>
+            <button onclick="chCheckinDate(1)" style="margin:0;padding:7px 14px;font-size:.82em">Next →</button>
+        </div>
+        <span id="ciDataStatus" style="font-size:.82em;color:#8B7BA8;font-style:italic"></span>
+    </div>
+
+    <button onclick="generatePost()">✨ Generate My Check-In Post</button>
+
+    <div id="ciOutput" style="display:none;margin-top:20px">
+        <h3>Your Check-In Post — copy and paste into Skool</h3>
+        <div class="post-box" id="ciPostText"></div>
+        <button onclick="copyPost()">📋 Copy Post</button>
+        <div id="ciCopied" style="display:none;color:#7B3FBE;font-weight:600;margin-top:8px;font-size:.9em">✓ Copied! Paste into Skool.</div>
+
+        <div style="margin-top:28px;padding-top:24px;border-top:2px solid rgba(232,213,242,.5)">
+            <label class="field-label">Paste your Skool comment link after you post</label>
+            <p style="color:#8B7BA8;font-size:.85em;margin-bottom:10px">Find your comment → click ··· → Copy link → paste here. This saves to your Link Tracker automatically.</p>
+            <input type="url" id="ciSkoolLink" placeholder="https://www.skool.com/..." style="width:100%" oninput="saveSkoolLinkFromCI()">
+            <div id="ciSkoolSaved" style="display:none;color:#7B3FBE;font-weight:600;margin-top:6px;font-size:.85em">✓ Saved to Link Tracker</div>
+        </div>
+    </div>
+
+    <div style="margin-top:36px;padding-top:28px;border-top:2px solid rgba(232,213,242,.5)">
+        <h3 style="margin-top:0">📤 Submit Your Daily Design System to Amanda</h3>
+        <p style="color:#8B7BA8;font-size:.9em;margin-bottom:4px">Generate a link containing all your data and paste it wherever Amanda asks for it.</p>
+        <p style="color:#9B8BA8;font-size:.8em;font-style:italic;margin-bottom:16px">The link will look long — that's normal, it encodes your entire 28 days inside it.</p>
+        <button onclick="genShare('ci')" class="btn-lime">🔗 Generate My Submission Link</button>
+        <div id="shareBoxCI" style="display:none" class="share-box">
+            <h3>Your Submission Link</h3>
+            <div class="share-row"><input type="text" id="shareLinkCI" readonly><button onclick="cpShare('ci')" style="margin:0">Copy</button></div>
+            <div id="shareCopiedCI" style="display:none;color:#7B3FBE;font-weight:600;font-size:.88em;margin-top:8px">✓ Copied!</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════ CONTENT BANK ═══════════════ -->
+<div id="content" class="panel">
+    <h2>Content Bank</h2>
+    <div style="text-align:center;font-style:italic;color:#6B5B88;font-size:1.1em;padding:20px;background:linear-gradient(135deg,rgba(232,213,242,.3),rgba(213,232,247,.3));border-radius:14px;border:2px solid rgba(204,255,0,.3);margin-bottom:22px">"Your daily experience IS your content. Every insight, struggle, and breakthrough is teaching material."</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+        <button onclick="setCF('all',this)" class="btn-sm" id="cf-all">All</button>
+        <button onclick="setCF('reflection',this)" class="btn-sm" style="background:linear-gradient(135deg,#B084E8,#6BA3E8)" id="cf-reflection">Visibility Reflections</button>
+        <button onclick="setCF('ideas',this)" class="btn-sm" style="background:linear-gradient(135deg,#6BA3E8,#A8D5E2)" id="cf-ideas">Other Ideas</button>
+    </div>
+    <div id="cbList"></div>
+    <button onclick="exportCB()" style="background:linear-gradient(135deg,#E8C48B,#E8B5C8)">Export Content Bank</button>
+</div>
+
+<!-- ═══════════════ LINK TRACKER ═══════════════ -->
+<div id="links" class="panel">
+    <h2>📎 Link Tracker</h2>
+    <div class="info">Two links per day: the content you published + your Skool check-in comment. Content links auto-fill from your Evening Debrief. Skool links auto-fill when you paste them on the Daily Check-In tab.</div>
+    <div id="ltProgress" style="margin-bottom:20px"></div>
+    <div id="ltList"></div>
+</div>
+
+<!-- ═══════════════ PROGRESS ═══════════════ -->
+<div id="progress" class="panel">
+    <h2>Progress Tracker</h2>
+    <div style="text-align:center;padding:22px;background:linear-gradient(135deg,rgba(204,255,0,.15),rgba(176,132,232,.15));border:2px solid rgba(204,255,0,.4);border-radius:18px;margin-bottom:24px">
+        <div class="ch-badge" id="chBadge">Challenge Day — of 28</div>
+        <div style="margin-top:10px;color:#8B7BA8;font-size:.88em;font-style:italic" id="chPhase"></div>
+        <div style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
+            <label style="color:#6B5B88;font-weight:600;font-size:.9em">Challenge start date:</label>
+            <input type="date" id="chStart" onchange="saveChStart()" style="padding:8px 12px;border:2px solid rgba(176,132,232,.4);border-radius:10px;font-family:inherit;font-size:.9em">
+        </div>
+    </div>
+    <div class="stat-row" id="statRow"></div>
+    <h3>28-Day Map</h3>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;font-size:.8em;color:#6B5B88">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:4px;background:rgba(204,255,0,.28);border:2px solid #CCFF00;display:inline-block"></span>AM + PM</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:4px;background:rgba(176,132,232,.2);border:2px solid #B084E8;display:inline-block"></span>Morning only</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:4px;background:rgba(107,163,232,.2);border:2px solid #6BA3E8;display:inline-block"></span>Evening only</span>
+    </div>
+    <div class="t-grid" id="tGrid"></div>
+
+    <div style="background:linear-gradient(135deg,rgba(204,255,0,.1),rgba(176,132,232,.1));border:2px solid rgba(204,255,0,.4);border-radius:16px;padding:24px;margin:24px 0">
+        <h3 style="margin-top:0;color:#6B5B88">📤 Submit to Amanda</h3>
+        <p style="color:#8B7BA8;font-size:.88em;margin-bottom:4px">One link contains your full 28 days of data. Copy and paste it wherever Amanda asks.</p>
+        <p style="color:#9B8BA8;font-size:.78em;font-style:italic;margin-bottom:14px">The link will look long — that's normal.</p>
+        <button onclick="genShare('pt')" class="btn-lime" style="margin:0">🔗 Generate My Submission Link</button>
+        <div id="shareBoxPT" style="display:none;margin-top:14px" class="share-box">
+            <h3>Your Submission Link</h3>
+            <div class="share-row"><input type="text" id="shareLinkPT" readonly><button onclick="cpShare('pt')" style="margin:0">Copy</button></div>
+            <div id="shareCopiedPT" style="display:none;color:#7B3FBE;font-weight:600;font-size:.88em;margin-top:8px">✓ Copied!</div>
+        </div>
+    </div>
+    <button onclick="exportJSON()" class="btn-soft btn-sm">Export JSON File</button>
+    <button onclick="clearAll()" style="background:linear-gradient(135deg,#E8B5C8,#E8C8B5)" class="btn-sm">Clear All Data</button>
+</div>
+
+<div class="save-pill" id="savePill">Saved ✓</div>
+
+<div class="modal-bg" id="modal">
+    <div class="modal-inner">
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <div id="modalBody"></div>
+    </div>
+</div>
+</div><!-- /wrap -->
+
 <script>
-var trackerData = JSON.parse(localStorage.getItem('dailyPlannerData') || '{}');
-var weeklyData  = JSON.parse(localStorage.getItem('weeklyPlannerData') || '{}');
-var miscData    = JSON.parse(localStorage.getItem('miscData') || '{}');
+// ── Storage ──────────────────────────────────────────────────────────
+var D = JSON.parse(localStorage.getItem('vbd_daily') || '{}');
+var W = JSON.parse(localStorage.getItem('vbd_weekly') || '{}');
+var M = JSON.parse(localStorage.getItem('vbd_misc') || '{}');
 
-var todayStr       = new Date().toISOString().split('T')[0];
-var morningDateStr = todayStr;
-var debriefDateStr = todayStr;
-var currentWeekStart = getWeekStart(new Date());
-var contentFilter  = 'all';
-var selectedContentType = '';
+var TODAY = new Date().toISOString().split('T')[0];
+var mDay  = TODAY;   // morning nav date
+var eDay  = TODAY;   // evening nav date
+var ciDay = yesterday(TODAY); // check-in pulls from yesterday
+var wkStart = wkOf(new Date());
+var cfFilter = 'all';
+var selectedType = '';
 
-function getWeekStart(d) {
-    var x = new Date(d);
-    x.setDate(x.getDate() - x.getDay());
-    return x.toISOString().split('T')[0];
+function yesterday(ds){ var d=new Date(ds); d.setDate(d.getDate()-1); return d.toISOString().split('T')[0]; }
+function wkOf(d){ var x=new Date(d); x.setDate(x.getDate()-x.getDay()); return x.toISOString().split('T')[0]; }
+function addDays(ds,n){ var d=new Date(ds); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
+
+function initDay(ds){
+    if(!D[ds]) D[ds]={
+        mDone:false, eDone:false,
+        mFocus:'', mDump:'', mEnergy:'', mTasks:['','',''], mChecked:[false,false,false],
+        eVisitors:'', eVisitorsDir:'up', eConv:'', eConvDir:'up',
+        eMembers:'', eMembersDir:'up', eProfile:'', eProfileDir:'up',
+        eContentNum:'', eContentLink:'', eContentType:'',
+        eDMs:'', eComments:'', eAdSpend:'', eNewAds:'',
+        eWins:'', eCarry:'', eReflection:'', eContentIdeas:''
+    };
+    var r=D[ds];
+    ['eVisitors','eVisitorsDir','eConv','eConvDir','eMembers','eMembersDir','eProfile','eProfileDir',
+     'eGroupPosts','eGroupComments','eGroupLikes',
+     'eContentNum','eContentLink','eContentType','eDMs','eComments','eAdSpend','eNewAds',
+     'eWins','eCarry','eReflection','eContentIdeas'].forEach(function(k){ if(r[k]===undefined) r[k]=''; });
+    if(!r.mTasks) r.mTasks=['','',''];
+    if(!r.mChecked) r.mChecked=[false,false,false];
+}
+function initWk(wk){ if(!W[wk]) W[wk]={phase:'',A:'',N:'',C:'',D:'',ww:'',st:'',ms:'',mp:'',mc:'',mpr:''}; }
+initDay(TODAY); initWk(wkStart);
+if(!M.skoolLinks) M.skoolLinks={};
+if(!M.snap) M.snap={};
+
+function ge(id){ return document.getElementById(id); }
+function gv(id){ var e=ge(id); return e?e.value:''; }
+function sv(id,v){ var e=ge(id); if(e) e.value=(v===undefined||v===null)?'':v; }
+function pill(){ var e=ge('savePill'); e.classList.add('show'); setTimeout(function(){e.classList.remove('show');},2000); }
+function save(){ localStorage.setItem('vbd_daily',JSON.stringify(D)); localStorage.setItem('vbd_weekly',JSON.stringify(W)); localStorage.setItem('vbd_misc',JSON.stringify(M)); pill(); }
+
+function fmtLong(ds){ return new Date(ds).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}); }
+function fmtShort(ds){ return new Date(ds).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+function dirLabel(v){ return v==='up'?'UP':v==='down'?'DOWN':'SAME'; }
+function arrow(v){ return v==='up'?'↑':v==='down'?'↓':'→'; }
+
+// ── Tab switching ────────────────────────────────────────────────────
+function go(id,btn){
+    document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+    document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+    ge(id).classList.add('active');
+    if(btn) btn.classList.add('active');
+    if(id==='content') renderCB();
+    if(id==='progress'){ renderStats(); renderGrid(); updChallenge(); }
+    if(id==='links') renderLT();
+    if(id==='snap') loadSnap();
+    if(id==='checkin') updCIDate();
 }
 
-function initDay(ds) {
-    if (!trackerData[ds]) {
-        trackerData[ds] = {
-            morningComplete:false, eveningComplete:false,
-            challengeFocus:'', brainDump:'', energyYes:'', synergy:'',
-            tasks:['','',''], tasksChecked:[false,false,false],
-            courseCorrection:'',
-            numIGPosts:'', numStories:'', numTikToks:'', numYouTube:'',
-            numSkoolPosts:'', numComments:'', numDMs:'',
-            wentWell:'', didntGoWell:'', patterns:'', contentIdeas:'',
-            visFelt:'', visResistance:'', visConditioning:'', visNoticing:'', visInsights:'',
-            timeEntries:[]
-        };
-    }
-    var d = trackerData[ds];
-    ['visFelt','visResistance','visConditioning','visNoticing','visInsights'].forEach(function(k){
-        if (d[k] === undefined) d[k] = '';
+// ── Date display helpers ─────────────────────────────────────────────
+ge('todayLabel').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+// ── Morning nav ──────────────────────────────────────────────────────
+function chDay(section, dir){
+    if(section==='morning'){ saveMorning(); mDay=addDays(mDay,dir); initDay(mDay); loadMorning(); }
+    else { saveEvening(); eDay=addDays(eDay,dir); initDay(eDay); loadEvening(); }
+}
+function updMorningNav(){
+    sv('mDate', fmtLong(mDay));
+    ge('mDate').textContent = fmtLong(mDay);
+    var r=D[mDay];
+    ge('mStatus').textContent = r&&r.mDone ? '✓ Completed' : 'Not yet completed';
+    ge('mTodayBadge').style.display = mDay===TODAY?'block':'none';
+}
+function loadMorning(){
+    var r=D[mDay];
+    sv('mFocus',r.mFocus); sv('mDump',r.mDump); sv('mEnergy',r.mEnergy);
+    sv('t1',r.mTasks[0]); sv('t2',r.mTasks[1]); sv('t3',r.mTasks[2]);
+    [['t1c',0],['t2c',1],['t3c',2]].forEach(function(x){ var e=ge(x[0]); if(e) e.checked=r.mChecked[x[1]]||false; });
+    updMorningNav();
+}
+function saveMorning(){
+    initDay(mDay);
+    var r=D[mDay];
+    r.mFocus=gv('mFocus'); r.mDump=gv('mDump'); r.mEnergy=gv('mEnergy');
+    r.mTasks=[gv('t1'),gv('t2'),gv('t3')];
+    r.mChecked=[ge('t1c')?ge('t1c').checked:false, ge('t2c')?ge('t2c').checked:false, ge('t3c')?ge('t3c').checked:false];
+    save();
+}
+function completeMorning(){ initDay(mDay); D[mDay].mDone=true; saveMorning(); updMorningNav(); alert('✨ Morning practice complete!'); }
+
+// ── Evening nav ──────────────────────────────────────────────────────
+function updEveningNav(){
+    ge('eDate').textContent = fmtLong(eDay);
+    var r=D[eDay];
+    ge('eStatus').textContent = r&&r.eDone ? '✓ Completed' : 'Not yet completed';
+    ge('eTodayBadge').style.display = eDay===TODAY?'block':'none';
+}
+function loadEvening(){
+    var r=D[eDay];
+    ['eVisitors','eVisitorsDir','eConv','eConvDir','eMembers','eMembersDir','eProfile','eProfileDir',
+     'eGroupPosts','eGroupComments','eGroupLikes',
+     'eContentNum','eContentLink','eDMs','eComments','eAdSpend','eNewAds','eWins','eCarry','eReflection'].forEach(function(k){ sv(k,r[k]); });
+    // restore content type
+    selectedType = r.eContentType || '';
+    document.querySelectorAll('.type-pill').forEach(function(p){
+        p.classList.toggle('sel', p.dataset.type === selectedType);
     });
+    updEveningNav();
 }
+function saveEvening(){
+    initDay(eDay);
+    var r=D[eDay];
+    ['eVisitors','eVisitorsDir','eConv','eConvDir','eMembers','eMembersDir','eProfile','eProfileDir',
+     'eGroupPosts','eGroupComments','eGroupLikes',
+     'eContentNum','eContentLink','eDMs','eComments','eAdSpend','eNewAds','eWins','eCarry','eReflection'].forEach(function(k){ r[k]=gv(k); });
+    r.eContentType = selectedType;
+    save();
+}
+function completeEvening(){ saveEvening(); D[eDay].eDone=true; save(); updEveningNav(); alert('✨ Evening debrief complete! Your check-in post is ready for tomorrow morning.'); }
 
-function initWeek(wk) {
-    if (!weeklyData[wk]) {
-        weeklyData[wk] = {attract:'',nurture:'',convert:'',deliver:'',wentWell:'',stuck:'',
-            miracleSpiritual:'',miraclePhysical:'',miracleCertainty:'',miraclePrayer:'',challengeWeek:''};
-    }
-}
-
-initDay(todayStr);
-initWeek(currentWeekStart);
-
-function ge(id) { return document.getElementById(id); }
-function sv(id, v) { var el = ge(id); if (el) el.value = (v === null || v === undefined) ? '' : v; }
-function gv(id) { var el = ge(id); return el ? el.value : ''; }
-
-function showSaveNotice() {
-    var n = ge('saveNotice');
-    n.classList.add('show');
-    setTimeout(function(){ n.classList.remove('show'); }, 2000);
-}
-
-function fmtDate(ds) {
-    return new Date(ds).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-}
-
-function dirArrow(dir) {
-    if (dir === 'up') return 'UP';
-    if (dir === 'down') return 'DOWN';
-    return 'SAME';
-}
-
-// ── Tab switching ──────────────────────────────────────────────────────
-function showTab(name, e) {
-    document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
-    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
-    ge(name).classList.add('active');
-    if (e && e.target) e.target.classList.add('active');
-    if (name === 'content') renderContentBank();
-    if (name === 'tracker') { updateStats(); renderTrackerGrid(); updateChallengeDayDisplay(); }
-    if (name === 'checkin') renderCheckins();
-    if (name === 'snapshot') loadSnapshot();
-}
-
-// ── Challenge day ──────────────────────────────────────────────────────
-function getChallengeDay() {
-    var s = miscData.challengeStartDate;
-    if (!s) return null;
-    var diff = Math.floor((new Date(todayStr) - new Date(s)) / 86400000) + 1;
-    return (diff < 1) ? null : Math.min(diff, 28);
-}
-function getPhaseLabel(day) {
-    if (!day) return 'Set your challenge start date below.';
-    if (day <= 7) return 'Education Phase (Days 1-7)';
-    if (day <= 21) return 'Accountability Phase (Days 8-21)';
-    return 'Final Push (Days 22-28)';
-}
-function updateChallengeDayDisplay() {
-    var day = getChallengeDay();
-    var badge = ge('challengeDayBadge'), phase = ge('challengePhaseLabel');
-    if (badge) badge.textContent = day ? ('Challenge Day ' + day + ' of 28') : 'Challenge Day — of 28';
-    if (phase) phase.textContent = getPhaseLabel(day);
-    var si = ge('challengeStartDate');
-    if (si && miscData.challengeStartDate) si.value = miscData.challengeStartDate;
-}
-function saveChallengeStart() {
-    miscData.challengeStartDate = gv('challengeStartDate');
-    localStorage.setItem('miscData', JSON.stringify(miscData));
-    updateChallengeDayDisplay();
-    renderCheckins();
-    showSaveNotice();
-}
-
-// ── Week nav ───────────────────────────────────────────────────────────
-function getWeekDisplay(wk) {
-    var s = new Date(wk), e = new Date(wk);
-    e.setDate(e.getDate() + 6);
-    var o = {month:'short',day:'numeric'};
-    return s.toLocaleDateString('en-US',o) + ' - ' + e.toLocaleDateString('en-US',o) + ', ' + s.getFullYear();
-}
-function changeWeek(dir) {
-    var d = new Date(currentWeekStart);
-    d.setDate(d.getDate() + dir * 7);
-    currentWeekStart = getWeekStart(d);
-    initWeek(currentWeekStart);
-    ge('weekDisplay').textContent = getWeekDisplay(currentWeekStart);
-    loadWeeklyData();
-}
-function saveChallengeWeek() {
-    weeklyData[currentWeekStart].challengeWeek = gv('challengeWeekSelect');
-    localStorage.setItem('weeklyPlannerData', JSON.stringify(weeklyData));
-    showSaveNotice();
-}
-
-// ── Morning date nav ───────────────────────────────────────────────────
-function changeMorningDate(dir) {
-    saveMorningData();
-    var d = new Date(morningDateStr);
-    d.setDate(d.getDate() + dir);
-    morningDateStr = d.toISOString().split('T')[0];
-    initDay(morningDateStr);
-    loadMorningData();
-}
-function updateMorningDateDisplay() {
-    var el = ge('morningDateDisplay'), badge = ge('morningTodayBadge'), status = ge('morningDayStatus');
-    if (el) el.textContent = fmtDate(morningDateStr);
-    if (badge) badge.style.display = (morningDateStr === todayStr) ? 'block' : 'none';
-    var d = trackerData[morningDateStr];
-    if (status) status.textContent = (d && d.morningComplete) ? 'Morning practice completed' : 'Not yet completed';
-}
-function loadMorningData() {
-    var d = trackerData[morningDateStr];
-    sv('challengeFocus', d.challengeFocus);
-    sv('brainDump', d.brainDump);
-    sv('energyYes', d.energyYes);
-    sv('synergy', d.synergy);
-    sv('task1', d.tasks[0]); sv('task2', d.tasks[1]); sv('task3', d.tasks[2]);
-    ['task1-check','task2-check','task3-check'].forEach(function(id, i){
-        var el = ge(id); if (el) el.checked = d.tasksChecked[i] || false;
-    });
-    sv('courseCorrection', d.courseCorrection);
-    updateMorningDateDisplay();
-}
-function saveMorningData() {
-    var d = trackerData[morningDateStr];
-    d.challengeFocus = gv('challengeFocus');
-    d.brainDump = gv('brainDump');
-    d.energyYes = gv('energyYes');
-    d.synergy = gv('synergy');
-    d.tasks = [gv('task1'), gv('task2'), gv('task3')];
-    d.tasksChecked = [
-        ge('task1-check') ? ge('task1-check').checked : false,
-        ge('task2-check') ? ge('task2-check').checked : false,
-        ge('task3-check') ? ge('task3-check').checked : false
-    ];
-    d.courseCorrection = gv('courseCorrection');
-    localStorage.setItem('dailyPlannerData', JSON.stringify(trackerData));
-    showSaveNotice();
-}
-function completeMorning() {
-    trackerData[morningDateStr].morningComplete = true;
-    saveMorningData();
-    updateMorningDateDisplay();
-    alert('Morning practice complete! You showed up for yourself today.');
-}
-
-// ── Evening date nav ───────────────────────────────────────────────────
-function changeDebriefDate(dir) {
-    saveDebriefData();
-    var d = new Date(debriefDateStr);
-    d.setDate(d.getDate() + dir);
-    debriefDateStr = d.toISOString().split('T')[0];
-    initDay(debriefDateStr);
-    loadDebriefData();
-}
-function updateDebriefDateDisplay() {
-    var el = ge('debriefDateDisplay'), badge = ge('eveningTodayBadge'), status = ge('debriefDayStatus');
-    if (el) el.textContent = fmtDate(debriefDateStr);
-    if (badge) badge.style.display = (debriefDateStr === todayStr) ? 'block' : 'none';
-    var d = trackerData[debriefDateStr];
-    if (status) status.textContent = (d && d.eveningComplete) ? 'Evening debrief completed' : 'Not yet completed';
-}
-function loadDebriefData() {
-    var d = trackerData[debriefDateStr];
-    if (!d) return;
-    sv('wentWell', d.wentWell); sv('didntGoWell', d.didntGoWell);
-    sv('patterns', d.patterns); sv('contentIdeas', d.contentIdeas);
-    sv('numIGPosts', d.numIGPosts); sv('numStories', d.numStories);
-    sv('numTikToks', d.numTikToks); sv('numYouTube', d.numYouTube);
-    sv('numSkoolPosts', d.numSkoolPosts); sv('numComments', d.numComments);
-    sv('numDMs', d.numDMs);
-    sv('visFelt', d.visFelt); sv('visResistance', d.visResistance);
-    sv('visConditioning', d.visConditioning); sv('visNoticing', d.visNoticing);
-    sv('visInsights', d.visInsights);
-    updateDebriefDateDisplay();
-}
-function saveDebriefData() {
-    var d = trackerData[debriefDateStr];
-    if (!d) return;
-    d.wentWell = gv('wentWell'); d.didntGoWell = gv('didntGoWell');
-    d.patterns = gv('patterns'); d.contentIdeas = gv('contentIdeas');
-    d.numIGPosts = gv('numIGPosts'); d.numStories = gv('numStories');
-    d.numTikToks = gv('numTikToks'); d.numYouTube = gv('numYouTube');
-    d.numSkoolPosts = gv('numSkoolPosts'); d.numComments = gv('numComments');
-    d.numDMs = gv('numDMs');
-    d.visFelt = gv('visFelt'); d.visResistance = gv('visResistance');
-    d.visConditioning = gv('visConditioning'); d.visNoticing = gv('visNoticing');
-    d.visInsights = gv('visInsights');
-    localStorage.setItem('dailyPlannerData', JSON.stringify(trackerData));
-    showSaveNotice();
-}
-function completeEvening() {
-    saveDebriefData();
-    trackerData[debriefDateStr].eveningComplete = true;
-    localStorage.setItem('dailyPlannerData', JSON.stringify(trackerData));
-    updateDebriefDateDisplay();
-    alert('Evening debrief complete! Tomorrow, you show up again.');
-}
-
-// ── During day ─────────────────────────────────────────────────────────
-function addTimeEntry() {
-    trackerData[todayStr].timeEntries.push({task:'',startTime:'',endTime:'',notes:''});
-    renderTimeEntries();
-    localStorage.setItem('dailyPlannerData', JSON.stringify(trackerData));
-}
-function renderTimeEntries() {
-    var container = ge('timeEntries');
-    var today = trackerData[todayStr];
-    if (!container || !today) return;
-    container.innerHTML = today.timeEntries.map(function(entry, i){
-        return '<div style="background:#fff;padding:20px;border-radius:12px;margin:15px 0;border:2px solid rgba(232,213,242,.5)">' +
-            '<input type="text" placeholder="Task name" value="' + entry.task.replace(/"/g,'&quot;') + '" onchange="updateTE(' + i + ',\'task\',this.value)" style="width:100%;padding:12px;border:2px solid rgba(232,213,242,.5);border-radius:10px;margin-bottom:10px;font-family:inherit">' +
-            '<div style="display:flex;gap:10px;margin-bottom:10px">' +
-            '<input type="time" value="' + entry.startTime + '" onchange="updateTE(' + i + ',\'startTime\',this.value)" style="padding:10px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit">' +
-            '<span style="align-self:center">to</span>' +
-            '<input type="time" value="' + entry.endTime + '" onchange="updateTE(' + i + ',\'endTime\',this.value)" style="padding:10px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit">' +
-            '</div>' +
-            '<input type="text" placeholder="Notes" value="' + entry.notes.replace(/"/g,'&quot;') + '" onchange="updateTE(' + i + ',\'notes\',this.value)" style="width:100%;padding:12px;border:2px solid rgba(232,213,242,.5);border-radius:10px;font-family:inherit">' +
-            '</div>';
-    }).join('');
-}
-function updateTE(i, field, val) {
-    trackerData[todayStr].timeEntries[i][field] = val;
-    localStorage.setItem('dailyPlannerData', JSON.stringify(trackerData));
-}
-
-// ── Daily Check-In Post Generator ──────────────────────────────────────
-var contentTypes = ['Post','Reel','TikTok','YouTube','Carousel','LinkedIn','Ad'];
-(function buildContentTypeButtons(){
-    var container = ge('contentTypeButtons');
-    if (!container) return;
-    contentTypes.forEach(function(type){
-        var btn = document.createElement('button');
-        btn.textContent = type;
-        btn.style.cssText = 'margin:0;padding:6px 14px;font-size:.8em;border-radius:20px;background:rgba(176,132,232,.2);color:#6B5B88;border:2px solid rgba(176,132,232,.3)';
-        btn.onclick = function(){
-            selectedContentType = (selectedContentType === type) ? '' : type;
-            document.querySelectorAll('#contentTypeButtons button').forEach(function(b){
-                b.style.background = 'rgba(176,132,232,.2)';
-                b.style.color = '#6B5B88';
-            });
-            if (selectedContentType) {
-                btn.style.background = 'linear-gradient(135deg,#B084E8,#6BA3E8)';
-                btn.style.color = '#fff';
-            }
+// Build content type pills
+(function(){
+    var c=ge('contentTypePills');
+    ['Post','Reel','TikTok','YouTube','Carousel','LinkedIn','Ad'].forEach(function(t){
+        var p=document.createElement('div');
+        p.className='type-pill'; p.textContent=t; p.dataset.type=t;
+        p.onclick=function(){
+            selectedType=(selectedType===t)?'':t;
+            document.querySelectorAll('.type-pill').forEach(function(x){ x.classList.toggle('sel', x.dataset.type===selectedType); });
+            saveEvening();
         };
-        container.appendChild(btn);
+        c.appendChild(p);
     });
 })();
 
-function generateCheckinPost() {
-    var day = getChallengeDay() || '?';
-    var visitors    = gv('ci_visitors') || '—';
-    var visitDir    = dirArrow(gv('ci_visitors_dir'));
-    var conversion  = gv('ci_conversion') || '—';
-    var convDir     = dirArrow(gv('ci_conversion_dir'));
-    var contentCount= gv('ci_content_count') || '—';
-    var contentDir  = dirArrow(gv('ci_content_dir'));
-    var contentLink = gv('ci_content_link') || '—';
-    var profile     = gv('ci_profile') || '—';
-    var profileDir  = dirArrow(gv('ci_profile_dir'));
-    var members     = gv('ci_members') || '—';
-    var membersDir  = dirArrow(gv('ci_members_dir'));
-    var insight     = gv('ci_insight') || '—';
-    var ddsLink     = gv('ci_dds_link') || '—';
-    var typeLabel   = selectedContentType ? ' (' + selectedContentType + ')' : '';
+// ── Check-In Post ────────────────────────────────────────────────────
+function updCIDate(){
+    ge('ciDateLabel').textContent = fmtShort(ciDay) + "'s evening data";
+    initDay(ciDay);
+    var r=D[ciDay];
+    var hasData = r && (r.eDone || r.eWins || r.eVisitors);
+    ge('ciDataStatus').textContent = hasData ? '✓ Evening debrief found' : 'No evening debrief yet for this date';
+    // load skool link if saved
+    var dayNum = getDayNum(ciDay);
+    if(dayNum && M.skoolLinks[dayNum]) sv('ciSkoolLink', M.skoolLinks[dayNum]);
+    else sv('ciSkoolLink','');
+}
+function chCheckinDate(dir){ ciDay=addDays(ciDay,dir); initDay(ciDay); updCIDate(); ge('ciOutput').style.display='none'; }
 
-    var post =
-        'DAY ' + day + ' CHECK-IN — 28-Day Visibility By Design Challenge\n' +
-        '—'.repeat(48) + '\n\n' +
-        'Visitors: ' + visitors + ' (' + visitDir + ')\n' +
-        'Conversion Rate: ' + conversion + '% (' + convDir + ')\n' +
-        'Content Published / Ad Spend: ' + contentCount + ' (' + contentDir + ')\n' +
-        'Link to Content' + typeLabel + ': ' + contentLink + '\n' +
-        'Profile Activity: ' + profile + ' (' + profileDir + ')\n' +
-        'Members: ' + members + ' (' + membersDir + ')\n\n' +
-        'One thing I\'m realizing / one question I have about visibility:\n' + insight + '\n\n' +
-        'Daily Design System: ' + ddsLink;
-
-    ge('checkinPostText').textContent = post;
-    ge('checkinPostOutput').style.display = 'block';
+function generatePost(){
+    initDay(ciDay);
+    var r=D[ciDay];
+    var checkInDate = addDays(ciDay,1);
+    var dayNum = getDayNum(checkInDate) || '?';
+    var dateStr = new Date(checkInDate).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    var typeStr = r.eContentType ? ' '+r.eContentType : '';
+    var dirArrow = function(v){ return v==='up'?' ↑':v==='down'?' ↓':' →'; };
+    // Use \n\n so Skool renders each line separately
+    var lines = [
+        '✨ DAY '+dayNum+' CHECK-IN — Visibility By Design Challenge',
+        '📅 '+dateStr,
+        '👤 Visitors: '+(r.eVisitors||'—')+dirArrow(r.eVisitorsDir||'same'),
+        '📈 Conversion: '+(r.eConv||'—')+'%'+dirArrow(r.eConvDir||'same'),
+        '🌟 Members: '+(r.eMembers||'—')+dirArrow(r.eMembersDir||'same'),
+        '⚡ Profile Activity: '+(r.eProfile||'—')+dirArrow(r.eProfileDir||'same'),
+        '🔗 Yesterday\'s'+typeStr+': '+(r.eContentLink||'—'),
+        '👁 '+(r.eReflection||'—')
+    ];
+    var box = ge('ciPostText');
+    box.innerHTML = '';
+    lines.forEach(function(line, i){
+        var p = document.createElement('p');
+        p.style.margin = '0 0 6px 0';
+        p.textContent = line;
+        box.appendChild(p);
+    });
+    ge('ciOutput').style.display = 'block';
+    ge('ciOutput').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function copyPost(){
+    var box = ge('ciPostText');
+    var range = document.createRange();
+    range.selectNodeContents(box);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    var m = ge('ciCopied');
+    try {
+        document.execCommand('copy');
+        m.textContent = '✓ Copied! Paste into Skool.';
+    } catch(e) {
+        m.textContent = '👆 Text selected — press Cmd+C (Mac) or Ctrl+C (Windows) to copy';
+    }
+    m.style.display = 'block';
+    setTimeout(function(){ m.style.display='none'; }, 4000);
+}
+function saveSkoolLinkFromCI(){
+    var dayNum=getDayNum(ciDay);
+    if(!dayNum) return;
+    M.skoolLinks[dayNum]=gv('ciSkoolLink');
+    save();
+    ge('ciSkoolSaved').style.display='block';
+    setTimeout(function(){ ge('ciSkoolSaved').style.display='none'; },3000);
 }
 
-function copyCheckinPost() {
-    var text = ge('checkinPostText').textContent;
-    navigator.clipboard.writeText(text).then(function(){
-        var msg = ge('copiedMsg');
-        msg.style.display = 'block';
-        setTimeout(function(){ msg.style.display = 'none'; }, 3000);
-    });
+// ── Share link ────────────────────────────────────────────────────────
+function genShare(src){
+    try{
+        var enc=btoa(unescape(encodeURIComponent(JSON.stringify({daily:D,weekly:W,misc:M}))));
+        var url=window.location.href.split('?')[0].split('#')[0]+'#review='+enc;
+        if(src==='ci'){ ge('shareLinkCI').value=url; ge('shareBoxCI').style.display='block'; ge('shareBoxCI').scrollIntoView({behavior:'smooth',block:'center'}); }
+        else { ge('shareLinkPT').value=url; ge('shareBoxPT').style.display='block'; ge('shareBoxPT').scrollIntoView({behavior:'smooth',block:'center'}); }
+    }catch(e){ alert('Could not generate link. Try exporting JSON instead.'); }
+}
+function cpShare(src){
+    var id=src==='ci'?'shareLinkCI':'shareLinkPT', mid=src==='ci'?'shareCopiedCI':'shareCopiedPT';
+    navigator.clipboard.writeText(ge(id).value).then(function(){
+        ge(mid).style.display='block'; setTimeout(function(){ge(mid).style.display='none';},4000);
+    }).catch(function(){ ge(id).select(); document.execCommand('copy'); ge(mid).style.display='block'; setTimeout(function(){ge(mid).style.display='none';},4000); });
+}
+
+// ── Weekly ────────────────────────────────────────────────────────────
+function wkDisplay(wk){ var s=new Date(wk),e=new Date(wk); e.setDate(e.getDate()+6); var o={month:'short',day:'numeric'}; return s.toLocaleDateString('en-US',o)+' – '+e.toLocaleDateString('en-US',o); }
+function chWeek(dir){ saveWeekly(); var d=new Date(wkStart); d.setDate(d.getDate()+dir*7); wkStart=wkOf(d); initWk(wkStart); loadWeekly(); }
+function loadWeekly(){ var w=W[wkStart]; ge('wkLabel').textContent=wkDisplay(wkStart); sv('wkPhase',w.phase); sv('wkA',w.A); sv('wkN',w.N); sv('wkC',w.C); sv('wkD',w.D); sv('wkWW',w.ww); sv('wkSt',w.st); sv('wkMS',w.ms); sv('wkMP',w.mp); sv('wkMC',w.mc); sv('wkMPr',w.mpr); }
+function saveWeekly(){ initWk(wkStart); var w=W[wkStart]; w.phase=gv('wkPhase'); w.A=gv('wkA'); w.N=gv('wkN'); w.C=gv('wkC'); w.D=gv('wkD'); w.ww=gv('wkWW'); w.st=gv('wkSt'); w.ms=gv('wkMS'); w.mp=gv('wkMP'); w.mc=gv('wkMC'); w.mpr=gv('wkMPr'); save(); }
+
+// ── Starting point ─────────────────────────────────────────────────────
+function saveSnap(){ M.snap={ig:gv('sIG'),tt:gv('sTT'),yt:gv('sYT'),sk:gv('sSK'),mrr:gv('sMRR'),em:gv('sEM'),notes:gv('sNotes')}; save(); ge('snapMsg').style.display='block'; setTimeout(function(){ge('snapMsg').style.display='none';},3000); }
+function loadSnap(){ var s=M.snap||{}; sv('sIG',s.ig); sv('sTT',s.tt); sv('sYT',s.yt); sv('sSK',s.sk); sv('sMRR',s.mrr); sv('sEM',s.em); sv('sNotes',s.notes); }
+
+// ── Challenge day helpers ──────────────────────────────────────────────
+function getDayNum(ds){
+    var s=M.challengeStart; if(!s)return null;
+    var diff=Math.floor((new Date(ds)-new Date(s))/86400000)+1;
+    return diff>=1&&diff<=28?diff:null;
+}
+function getDayDateStr(n){ var s=M.challengeStart; if(!s)return null; var d=new Date(s); d.setDate(d.getDate()+n-1); return d.toISOString().split('T')[0]; }
+function phaseLabel(d){ if(!d)return'Set your challenge start date below.'; if(d<=7)return'📚 Education Phase — Days 1–7'; if(d<=21)return'🔥 Accountability Phase — Days 8–21'; return'🏁 Final Push — Days 22–28'; }
+function saveChStart(){ M.challengeStart=gv('chStart'); save(); updChallenge(); renderLT(); }
+
+function updChallenge(){
+    var s=M.challengeStart; if(s&&ge('chStart')) ge('chStart').value=s;
+    var day=getDayNum(TODAY);
+    ge('chBadge').textContent=day?'Challenge Day '+day+' of 28':'Challenge Day — of 28';
+    ge('chPhase').textContent=phaseLabel(day);
+}
+
+// ── Progress stats ─────────────────────────────────────────────────────
+function renderStats(){
+    var dates=Object.keys(D);
+    var am=0,pm=0,both=0,totC=0,totDMs=0,totAds=0,totSpend=0,reflDays=0;
+    dates.forEach(function(d){ var r=D[d]; if(r.mDone)am++; if(r.eDone)pm++; if(r.mDone&&r.eDone)both++; totC+=parseInt(r.eContentNum)||0; totDMs+=parseInt(r.eDMs)||0; totAds+=parseInt(r.eNewAds)||0; totSpend+=parseFloat(r.eAdSpend)||0; if(r.eReflection&&r.eReflection.trim())reflDays++; });
+    ge('statRow').innerHTML=[
+        {n:am+'/28',l:'Morning Practices',c:''},
+        {n:pm+'/28',l:'Evening Debriefs',c:''},
+        {n:both+'/28',l:'Full Days',c:'green'},
+        {n:totC,l:'Pieces Published',c:'pink'},
+        {n:totDMs,l:'DMs Sent',c:''},
+        {n:reflDays,l:'Days w/ Reflection',c:''},
+        {n:'$'+totSpend.toFixed(0),l:'Total Ad Spend',c:'pink'},
+        {n:totAds,l:'New Ads Launched',c:''}
+    ].map(function(s){ return'<div class="stat'+( s.c?' stat-'+s.c:'')+'" ><div class="stat-n">'+s.n+'</div><div class="stat-l">'+s.l+'</div></div>'; }).join('');
+}
+
+// ── 28-day grid ────────────────────────────────────────────────────────
+function renderGrid(){
+    var grid=ge('tGrid'); if(!grid)return;
+    var dates=Object.keys(D).sort().reverse().slice(0,56);
+    grid.innerHTML=dates.map(function(ds){
+        var r=D[ds]; var cls='t-none';
+        if(r.mDone&&r.eDone)cls='t-full'; else if(r.mDone)cls='t-am'; else if(r.eDone)cls='t-pm';
+        return'<div class="t-cell '+cls+'" onclick="openDay(\''+ds+'\')" title="'+fmtShort(ds)+'"><div style="font-weight:700">'+new Date(ds).getDate()+'</div><div style="font-size:.6em;margin-top:2px">'+(r.mDone?'AM':'')+' '+(r.eDone?'PM':'')+'</div></div>';
+    }).join('');
 }
 
 // ── Content bank ───────────────────────────────────────────────────────
-function setContentFilter(f) { contentFilter = f; renderContentBank(); }
-
-function renderContentBank() {
-    var container = ge('contentBankList');
-    if (!container) return;
-    var dates = Object.keys(trackerData).sort().reverse();
-    var cards = [];
-    dates.forEach(function(date){
-        var d = trackerData[date];
-        var sections = [];
-        if (d.visFelt && d.visFelt.trim()) sections.push({type:'insights', label:'How Visibility Felt', icon:'', color:'#B084E8', text:d.visFelt});
-        if (d.visResistance && d.visResistance.trim()) sections.push({type:'resistance', label:'Resistance', icon:'', color:'#E87CAE', text:d.visResistance});
-        if (d.visConditioning && d.visConditioning.trim()) sections.push({type:'resistance', label:'Conditioning / Old Stories', icon:'', color:'#E8A87C', text:d.visConditioning});
-        if (d.visNoticing && d.visNoticing.trim()) sections.push({type:'insights', label:'What I\'m Noticing', icon:'', color:'#6BA3E8', text:d.visNoticing});
-        if (d.visInsights && d.visInsights.trim()) sections.push({type:'insights', label:'Insights & Downloads', icon:'', color:'#B084E8', text:d.visInsights});
-        if (d.contentIdeas && d.contentIdeas.trim()) sections.push({type:'other', label:'Other Content Ideas', icon:'', color:'#7B9B00', text:d.contentIdeas});
-        var filtered = sections.filter(function(s){
-            if (contentFilter === 'all') return true;
-            if (contentFilter === 'insights') return s.type === 'insights';
-            if (contentFilter === 'resistance') return s.type === 'resistance';
-            if (contentFilter === 'other') return s.type === 'other';
-            return true;
-        });
-        if (filtered.length) cards.push({date:date, sections:filtered});
+function setCF(f){ contentFilter=f; renderCB(); }
+var contentFilter='all';
+function renderCB(){
+    var c=ge('cbList'); if(!c)return;
+    var dates=Object.keys(D).sort().reverse();
+    var cards=[];
+    dates.forEach(function(ds){
+        var r=D[ds]; var items=[];
+        if((contentFilter==='all'||contentFilter==='reflection')&&r.eReflection&&r.eReflection.trim())
+            items.push({label:'Visibility Reflection',color:'#B084E8',text:r.eReflection});
+        if((contentFilter==='all'||contentFilter==='ideas')&&r.eContentIdeas&&r.eContentIdeas.trim())
+            items.push({label:'Content Ideas',color:'#6BA3E8',text:r.eContentIdeas});
+        if(items.length) cards.push({ds:ds,items:items});
     });
-    if (!cards.length) {
-        container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#8B7BA8"><p style="font-size:1.2em;margin-bottom:10px">No content ideas yet</p><p style="font-style:italic">Complete your evening debriefs to start building your bank.</p></div>';
-        return;
-    }
-    container.innerHTML = cards.map(function(card){
-        var dateDisplay = new Date(card.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
-        var sectionsHTML = card.sections.map(function(s){
-            return '<div style="margin-bottom:12px;padding:12px 16px;background:rgba(248,245,255,.7);border-left:4px solid ' + s.color + ';border-radius:10px">' +
-                '<div style="font-size:.8em;font-weight:700;color:' + s.color + ';margin-bottom:5px">' + s.label.toUpperCase() + '</div>' +
-                '<div style="white-space:pre-wrap;color:#2a2a2a;line-height:1.7;font-size:.95em">' + s.text + '</div></div>';
-        }).join('');
-        return '<div style="background:#fff;padding:25px;border-radius:15px;margin-bottom:20px;border-left:4px solid #CCFF00;box-shadow:0 4px 12px rgba(200,181,232,.2)">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
-            '<h3 style="color:#6B5B88;margin:0;font-size:1.05em">' + dateDisplay + '</h3>' +
-            '<button onclick="viewDay(\'' + card.date + '\')" style="padding:8px 16px;font-size:.85em;margin:0">Full Day</button></div>' +
-            sectionsHTML + '</div>';
+    if(!cards.length){ c.innerHTML='<div style="text-align:center;padding:50px 20px;color:#aaa"><p style="font-size:1.1em;margin-bottom:8px">No content yet</p><p style="font-style:italic">Complete your evening debriefs to start building your bank.</p></div>'; return; }
+    c.innerHTML=cards.map(function(card){
+        return'<div style="background:#fff;padding:22px;border-radius:15px;margin-bottom:18px;border-left:4px solid #CCFF00;box-shadow:0 4px 12px rgba(200,181,232,.18)">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><strong style="color:#6B5B88">'+fmtShort(card.ds)+'</strong><button onclick="openDay(\''+card.ds+'\')" class="btn-sm" style="margin:0;padding:7px 14px">Full Day</button></div>'+
+        card.items.map(function(it){ return'<div style="margin-bottom:10px;padding:12px 14px;background:rgba(248,245,255,.8);border-left:4px solid '+it.color+';border-radius:10px"><div style="font-size:.75em;font-weight:700;color:'+it.color+';margin-bottom:4px;text-transform:uppercase">'+it.label+'</div><div style="font-size:.92em;color:#2a2a2a;line-height:1.65;white-space:pre-wrap">'+it.text+'</div></div>'; }).join('')+
+        '</div>';
     }).join('');
 }
-
-function exportContentIdeas() {
-    var dates = Object.keys(trackerData).sort().reverse();
-    var lines = ['CONTENT BANK - Exported ' + new Date().toLocaleDateString(), '='.repeat(60)];
-    dates.forEach(function(date){
-        var d = trackerData[date];
-        var parts = [];
-        if (d.visFelt) parts.push('HOW VISIBILITY FELT:\n' + d.visFelt);
-        if (d.visResistance) parts.push('RESISTANCE:\n' + d.visResistance);
-        if (d.visConditioning) parts.push('CONDITIONING:\n' + d.visConditioning);
-        if (d.visNoticing) parts.push('WHAT I\'M NOTICING:\n' + d.visNoticing);
-        if (d.visInsights) parts.push('INSIGHTS & DOWNLOADS:\n' + d.visInsights);
-        if (d.contentIdeas) parts.push('OTHER IDEAS:\n' + d.contentIdeas);
-        if (parts.length) lines.push('\n=== ' + fmtDate(date) + ' ===\n' + parts.join('\n\n'));
-    });
-    if (lines.length <= 2) { alert('No content to export yet.'); return; }
-    var blob = new Blob([lines.join('\n')], {type:'text/plain'});
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'content-bank-' + todayStr + '.txt';
-    a.click();
+function exportCB(){
+    var lines=['CONTENT BANK — '+new Date().toLocaleDateString(),'='.repeat(56)];
+    Object.keys(D).sort().forEach(function(ds){ var r=D[ds]; var parts=[]; if(r.eReflection&&r.eReflection.trim())parts.push('VISIBILITY REFLECTION:\n'+r.eReflection); if(r.eContentIdeas&&r.eContentIdeas.trim())parts.push('OTHER IDEAS:\n'+r.eContentIdeas); if(parts.length){lines.push('');lines.push('=== '+fmtLong(ds)+' ===');lines.push(parts.join('\n\n'));} });
+    if(lines.length<=2){alert('Nothing to export yet.');return;}
+    var b=new Blob([lines.join('\n')],{type:'text/plain'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='content-bank-'+TODAY+'.txt'; a.click();
 }
 
-// ── Check-in link tracker ──────────────────────────────────────────────
-function renderCheckins() {
-    var container = ge('checkinList');
-    if (!container) return;
-    if (!miscData.checkinLinks) miscData.checkinLinks = {};
-    if (!miscData.actionLinks) miscData.actionLinks = {};
-    if (!miscData.ddsLinks) miscData.ddsLinks = {};
-    var links = miscData.checkinLinks, actionLinks = miscData.actionLinks, ddsLinks = miscData.ddsLinks;
-    var startStr = miscData.challengeStartDate;
-    var totalC = Object.keys(links).filter(function(k){ return links[k] && links[k].trim(); }).length;
-    var totalD = Object.keys(ddsLinks).filter(function(k){ return ddsLinks[k] && ddsLinks[k].trim(); }).length;
-
-    var progressBar = '<div style="background:linear-gradient(135deg,rgba(204,255,0,.15),rgba(176,132,232,.15));border:2px solid rgba(204,255,0,.4);border-radius:12px;padding:14px 20px;margin-bottom:20px">' +
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="color:#6B5B88;font-weight:700">Check-ins: ' + totalC + ' of 28</span><div style="background:rgba(232,213,242,.4);border-radius:20px;height:10px;flex:1;margin:0 14px;overflow:hidden"><div style="background:linear-gradient(135deg,#B084E8,#6BA3E8);height:100%;width:' + Math.round((totalC/28)*100) + '%;border-radius:20px"></div></div><span style="color:#B084E8;font-weight:700">' + Math.round((totalC/28)*100) + '%</span></div>' +
-        '<div style="display:flex;align-items:center;justify-content:space-between"><span style="color:#6B5B88;font-weight:700">DDS submitted: ' + totalD + ' of 28</span><div style="background:rgba(232,213,242,.4);border-radius:20px;height:10px;flex:1;margin:0 14px;overflow:hidden"><div style="background:linear-gradient(135deg,#CCFF00,#B084E8);height:100%;width:' + Math.round((totalD/28)*100) + '%;border-radius:20px"></div></div><span style="color:#7B9B00;font-weight:700">' + Math.round((totalD/28)*100) + '%</span></div>' +
-        '</div>';
-
-    var rows = '';
-    for (var day = 1; day <= 28; day++) {
-        var phaseColor = day <= 7 ? '#B084E8' : day <= 21 ? '#6BA3E8' : '#E8A87C';
-        var dateLabel = '';
-        if (startStr) {
-            var dd = new Date(startStr);
-            dd.setDate(dd.getDate() + day - 1);
-            dateLabel = dd.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-        }
-        var saved = links[day] || '', savedDDS = ddsLinks[day] || '';
-        var hasC = saved.trim().length > 0, hasD = savedDDS.trim().length > 0;
-        var borderColor = (hasC && hasD) ? 'rgba(204,255,0,.6)' : (hasC || hasD) ? 'rgba(176,132,232,.4)' : 'rgba(232,213,242,.5)';
-        rows += '<div style="margin-bottom:12px;background:#fff;border-radius:14px;border:2px solid ' + borderColor + ';overflow:hidden">' +
-            '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(248,245,255,.6);border-bottom:1px solid rgba(232,213,242,.4)">' +
-            '<div style="min-width:80px"><div style="font-weight:700;font-size:1em;color:' + phaseColor + '">Day ' + day + '</div><div style="font-size:.72em;color:#8B7BA8">' + dateLabel + '</div></div>' +
-            '<div style="font-size:1.3em">' + ((hasC && hasD) ? 'complete' : (hasC || hasD) ? 'partial' : '') + '</div></div>' +
-            '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">' +
-            '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:.8em;font-weight:700;color:#8B7BA8;white-space:nowrap;min-width:130px">Skool check-in post</span><input type="url" placeholder="Paste check-in comment link" value="' + saved.replace(/"/g,'&quot;') + '" onchange="saveCheckinLink(' + day + ',this.value)" style="flex:1;padding:9px 12px;border:2px solid rgba(232,213,242,.5);border-radius:8px;font-family:inherit;font-size:.9em">' + (hasC ? '<a href="' + saved + '" target="_blank" style="color:#B084E8;font-size:.85em;font-weight:700;text-decoration:none;white-space:nowrap">View</a>' : '') + '</div>' +
-            '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:.8em;font-weight:700;color:#7B9B00;white-space:nowrap;min-width:130px">Daily Design System</span><input type="url" placeholder="Paste DDS link for Amanda to review" value="' + savedDDS.replace(/"/g,'&quot;') + '" onchange="saveDDSLink(' + day + ',this.value)" style="flex:1;padding:9px 12px;border:2px solid rgba(232,213,242,.5);border-radius:8px;font-family:inherit;font-size:.9em">' + (hasD ? '<a href="' + savedDDS + '" target="_blank" style="color:#7B9B00;font-size:.85em;font-weight:700;text-decoration:none;white-space:nowrap">View</a>' : '') + '</div>' +
+// ── Link tracker ───────────────────────────────────────────────────────
+function renderLT(){
+    var lp=ge('ltProgress'), ll=ge('ltList'); if(!lp||!ll)return;
+    var totC=0, totS=0;
+    for(var i=1;i<=28;i++){ var ds=getDayDateStr(i); if(ds&&D[ds]&&D[ds].eContentLink&&D[ds].eContentLink.trim())totC++; if(M.skoolLinks[i]&&M.skoolLinks[i].trim())totS++; }
+    lp.innerHTML='<div style="background:linear-gradient(135deg,rgba(204,255,0,.15),rgba(176,132,232,.15));border:2px solid rgba(204,255,0,.4);border-radius:12px;padding:14px 18px;margin-bottom:16px">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="color:#6B5B88;font-weight:700;font-size:.9em">Content links: '+totC+' / 28</span><div style="background:rgba(232,213,242,.4);border-radius:20px;height:8px;flex:1;margin:0 12px;overflow:hidden"><div style="background:linear-gradient(135deg,#CCFF00,#B084E8);height:100%;width:'+Math.round((totC/28)*100)+'%;border-radius:20px"></div></div><span style="color:#7B9B00;font-weight:700;font-size:.88em">'+Math.round((totC/28)*100)+'%</span></div>'+
+        '<div style="display:flex;align-items:center;justify-content:space-between"><span style="color:#6B5B88;font-weight:700;font-size:.9em">Skool check-ins: '+totS+' / 28</span><div style="background:rgba(232,213,242,.4);border-radius:20px;height:8px;flex:1;margin:0 12px;overflow:hidden"><div style="background:linear-gradient(135deg,#B084E8,#6BA3E8);height:100%;width:'+Math.round((totS/28)*100)+'%;border-radius:20px"></div></div><span style="color:#B084E8;font-weight:700;font-size:.88em">'+Math.round((totS/28)*100)+'%</span></div></div>';
+    var rows='';
+    for(var day=1;day<=28;day++){
+        var dstr=getDayDateStr(day);
+        var cLink=(dstr&&D[dstr])?D[dstr].eContentLink||'':'';
+        var sLink=M.skoolLinks[day]||'';
+        var hasC=cLink.trim().length>0, hasS=sLink.trim().length>0;
+        var bc=(hasC&&hasS)?'rgba(204,255,0,.6)':(hasC||hasS)?'rgba(176,132,232,.4)':'rgba(232,213,242,.5)';
+        var pc=day<=7?'#B084E8':day<=21?'#6BA3E8':'#E8A87C';
+        var dl=dstr?new Date(dstr).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+        rows+='<div style="margin-bottom:8px;background:#fff;border-radius:12px;border:2px solid '+bc+';overflow:hidden">'+
+            '<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:rgba(248,245,255,.6);border-bottom:1px solid rgba(232,213,242,.3)">'+
+            '<div style="min-width:64px"><div style="font-weight:700;font-size:.9em;color:'+pc+'">Day '+day+'</div><div style="font-size:.68em;color:#8B7BA8">'+dl+'</div></div>'+
+            '<div style="font-size:.85em">'+(hasC&&hasS?'✅':(hasC||hasS)?'🔄':'')+'</div></div>'+
+            '<div style="padding:10px 14px;display:flex;flex-direction:column;gap:7px">'+
+            '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:.75em;font-weight:700;color:#7B9B00;min-width:100px">Content link</span>'+
+            '<input type="url" placeholder="Auto-fills from Evening Debrief" value="'+(cLink?cLink.replace(/"/g,'&quot;'):'')+'" onchange="saveCLink(\''+dstr+'\',this.value)" style="flex:1;padding:7px 10px;border:1px solid rgba(232,213,242,.6);border-radius:7px;font-family:inherit;font-size:.85em">'+
+            (hasC?'<a href="'+cLink+'" target="_blank" style="color:#7B9B00;font-size:.8em;font-weight:700;text-decoration:none">View</a>':'')+'</div>'+
+            '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:.75em;font-weight:700;color:#B084E8;min-width:100px">Skool check-in</span>'+
+            '<input type="url" placeholder="Auto-fills from Daily Check-In tab" value="'+(sLink?sLink.replace(/"/g,'&quot;'):'')+'" onchange="saveSLink('+day+',this.value)" style="flex:1;padding:7px 10px;border:1px solid rgba(232,213,242,.6);border-radius:7px;font-family:inherit;font-size:.85em">'+
+            (hasS?'<a href="'+sLink+'" target="_blank" style="color:#B084E8;font-size:.8em;font-weight:700;text-decoration:none">View</a>':'')+'</div>'+
             '</div></div>';
     }
-    container.innerHTML = progressBar + rows;
+    ll.innerHTML=rows;
 }
+function saveCLink(ds,v){ if(!ds)return; initDay(ds); D[ds].eContentLink=v; save(); }
+function saveSLink(day,v){ M.skoolLinks[day]=v; save(); }
 
-function saveCheckinLink(day, value) {
-    miscData.checkinLinks[day] = value;
-    localStorage.setItem('miscData', JSON.stringify(miscData));
-    renderCheckins();
-    showSaveNotice();
-}
-function saveDDSLink(day, value) {
-    if (!miscData.ddsLinks) miscData.ddsLinks = {};
-    miscData.ddsLinks[day] = value;
-    localStorage.setItem('miscData', JSON.stringify(miscData));
-    renderCheckins();
-    showSaveNotice();
-}
-
-// ── Snapshot ───────────────────────────────────────────────────────────
-function saveSnapshot() {
-    miscData.snapshot = {ig:gv('snapIG'),tiktok:gv('snapTikTok'),youtube:gv('snapYouTube'),skool:gv('snapSkool'),mrr:gv('snapMRR'),email:gv('snapEmail'),notes:gv('snapNotes')};
-    localStorage.setItem('miscData', JSON.stringify(miscData));
-    var msg = ge('snapshotSavedMsg');
-    if (msg) { msg.style.display = 'block'; setTimeout(function(){ msg.style.display = 'none'; }, 4000); }
-    showSaveNotice();
-}
-function loadSnapshot() {
-    var s = miscData.snapshot;
-    if (!s) return;
-    sv('snapIG',s.ig); sv('snapTikTok',s.tiktok); sv('snapYouTube',s.youtube);
-    sv('snapSkool',s.skool); sv('snapMRR',s.mrr); sv('snapEmail',s.email);
-    sv('snapNotes',s.notes);
-}
-
-// ── Progress tracker ───────────────────────────────────────────────────
-function renderTrackerGrid() {
-    var grid = ge('trackerGrid');
-    if (!grid) return;
-    var dates = Object.keys(trackerData).sort().reverse().slice(0, 60);
-    grid.innerHTML = dates.map(function(date){
-        var d = trackerData[date];
-        var bg = '#fff', border = 'rgba(232,213,242,.5)';
-        if (d.morningComplete && d.eveningComplete) { bg = 'rgba(204,255,0,.25)'; border = '#CCFF00'; }
-        else if (d.morningComplete) { bg = 'rgba(176,132,232,.2)'; border = '#B084E8'; }
-        else if (d.eveningComplete) { bg = 'rgba(107,163,232,.2)'; border = '#6BA3E8'; }
-        return '<div title="' + date + '" onclick="viewDay(\'' + date + '\')" style="aspect-ratio:1;border:2px solid ' + border + ';border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:' + bg + '">' +
-            '<div style="font-size:1em;font-weight:600">' + new Date(date).getDate() + '</div>' +
-            '<div style="font-size:.65em;margin-top:3px;font-weight:600;color:#6B5B88">' + (d.morningComplete ? 'AM' : '') + ' ' + (d.eveningComplete ? 'PM' : '') + '</div></div>';
-    }).join('');
-}
-function updateStats() {
-    var dates = Object.keys(trackerData).sort().reverse();
-    var total = 0, streak = 0, temp = 0;
-    dates.forEach(function(date){
-        var d = trackerData[date];
-        if (d.morningComplete || d.eveningComplete) { total++; temp++; if (temp > streak) streak = temp; }
-        else temp = 0;
-    });
-    var rate = dates.length ? Math.round((total / dates.length) * 100) : 0;
-    var s = ge('currentStreak'), t = ge('totalDays'), r = ge('completionRate');
-    if (s) s.textContent = streak;
-    if (t) t.textContent = total;
-    if (r) r.textContent = rate + '%';
-}
-
-function viewDay(dateStr) {
-    var d = trackerData[dateStr];
-    if (!d) return;
-    var numParts = [];
-    if (d.numIGPosts) numParts.push('IG: ' + d.numIGPosts);
-    if (d.numStories) numParts.push('Stories: ' + d.numStories);
-    if (d.numTikToks) numParts.push('TikToks: ' + d.numTikToks);
-    if (d.numYouTube) numParts.push('YouTube: ' + d.numYouTube);
-    if (d.numSkoolPosts) numParts.push('Skool: ' + d.numSkoolPosts);
-    if (d.numComments) numParts.push('Comments: ' + d.numComments);
-    if (d.numDMs) numParts.push('DMs: ' + d.numDMs);
-    var visFields = [
-        {label:'How Visibility Felt', val:d.visFelt, color:'#B084E8'},
-        {label:'Resistance', val:d.visResistance, color:'#E87CAE'},
-        {label:'Conditioning', val:d.visConditioning, color:'#E8A87C'},
-        {label:'Noticing', val:d.visNoticing, color:'#6BA3E8'},
-        {label:'Insights', val:d.visInsights, color:'#B084E8'}
-    ].filter(function(f){ return f.val && f.val.trim(); });
-    ge('modalContent').innerHTML =
-        '<h2 style="color:#C8B5E8;margin-bottom:20px">' + fmtDate(dateStr) + '</h2>' +
-        (d.challengeFocus ? '<div style="background:rgba(204,255,0,.15);padding:14px 18px;border-radius:10px;border-left:4px solid #CCFF00;margin-bottom:16px;font-weight:600;color:#2a2a2a">' + d.challengeFocus + '</div>' : '') +
-        (numParts.length ? '<h3 style="color:#8B7BA8;margin-top:20px">Numbers</h3><div style="display:flex;flex-wrap:wrap;gap:10px;background:#f9f5f0;padding:15px;border-radius:10px">' + numParts.map(function(n){ return '<span style="padding:6px 14px;background:#fff;border-radius:8px;font-size:.95em">' + n + '</span>'; }).join('') + '</div>' : '') +
-        (d.brainDump ? '<h3 style="color:#8B7BA8;margin-top:20px">Brain Dump</h3><p style="white-space:pre-wrap;background:#f9f5f0;padding:15px;border-radius:10px">' + d.brainDump + '</p>' : '') +
-        (d.wentWell ? '<h3 style="color:#8B7BA8;margin-top:20px">What Went Well</h3><p style="white-space:pre-wrap;background:#f9f5f0;padding:15px;border-radius:10px">' + d.wentWell + '</p>' : '') +
-        (visFields.length ? '<h3 style="color:#8B7BA8;margin-top:20px">Visibility Insights</h3>' + visFields.map(function(f){ return '<div style="margin-bottom:10px;padding:12px 16px;background:#f9f5f0;border-left:4px solid ' + f.color + ';border-radius:10px"><div style="font-size:.8em;font-weight:700;color:' + f.color + ';margin-bottom:5px">' + f.label.toUpperCase() + '</div><p style="white-space:pre-wrap;margin:0;font-size:.95em">' + f.val + '</p></div>'; }).join('') : '') +
-        (d.contentIdeas ? '<h3 style="color:#8B7BA8;margin-top:20px">Other Content Ideas</h3><p style="white-space:pre-wrap;background:#f9f5f0;padding:15px;border-radius:10px">' + d.contentIdeas + '</p>' : '');
-    ge('dayModal').style.display = 'flex';
-}
-function closeModal() { ge('dayModal').style.display = 'none'; }
-
-function exportData() {
-    var blob = new Blob([JSON.stringify({daily:trackerData,weekly:weeklyData,misc:miscData},null,2)],{type:'application/json'});
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'daily-design-system-' + todayStr + '.json';
-    a.click();
-}
-
-function generateShareLink() {
-    try {
-        var payload = JSON.stringify({daily:trackerData,weekly:weeklyData,misc:miscData});
-        var encoded = btoa(unescape(encodeURIComponent(payload)));
-        // Split into chunks to stay under URL limits and use a hash fragment (never sent to server)
-        var baseUrl = window.location.href.split('?')[0].split('#')[0];
-        var shareUrl = baseUrl + '#review=' + encoded;
-        var box = ge('shareLinkBox');
-        var input = ge('shareLinkInput');
-        box.style.display = 'block';
-        input.value = shareUrl;
-        box.scrollIntoView({behavior:'smooth', block:'center'});
-    } catch(e) {
-        alert('Could not generate link. Try using Export My Data instead.');
+// ── Day modal ──────────────────────────────────────────────────────────
+function openDay(ds){
+    var r=D[ds]; if(!r)return;
+    function blk(label,val,color){
+        if(!val||!String(val).trim())return'';
+        return'<div class="mb" style="border-left:3px solid '+(color||'#ddd')+'"><div class="ml">'+label+'</div><div class="mv">'+val+'</div></div>';
     }
+    ge('modalBody').innerHTML=
+        '<h2 style="color:#C8B5E8;font-size:1.3em;margin-bottom:12px">'+fmtLong(ds)+'</h2>'+
+        '<div style="display:flex;gap:6px;margin-bottom:14px">'+
+        (r.mDone?'<span style="background:rgba(204,255,0,.28);color:#4a7000;padding:4px 12px;border-radius:10px;font-size:.8em;font-weight:700">AM ✓</span>':'<span style="background:rgba(232,213,242,.4);color:#aaa;padding:4px 12px;border-radius:10px;font-size:.8em;font-weight:700">AM —</span>')+
+        (r.eDone?'<span style="background:rgba(107,163,232,.2);color:#2a6080;padding:4px 12px;border-radius:10px;font-size:.8em;font-weight:700">PM ✓</span>':'<span style="background:rgba(232,213,242,.4);color:#aaa;padding:4px 12px;border-radius:10px;font-size:.8em;font-weight:700">PM —</span>')+
+        '</div>'+
+        (r.mFocus?'<div style="background:rgba(204,255,0,.15);padding:10px 14px;border-radius:8px;border-left:3px solid #CCFF00;margin-bottom:10px;font-weight:600;font-size:.92em">'+r.mFocus+'</div>':'')+
+        blk('Brain Dump',r.mDump)+blk('Clear Energy / YES',r.mEnergy,'#CCFF00')+
+        (r.mTasks&&r.mTasks.some(function(t){return t;})?'<div class="mb"><div class="ml">Top 3 Tasks</div>'+r.mTasks.map(function(t,i){return t?'<div style="padding:4px 0;font-size:.9em">'+(r.mChecked&&r.mChecked[i]?'<span style="color:#7B9B00;font-weight:700">✓</span>':'○')+' '+t+'</div>':''}).join('')+'</div>':'')+
+        '<div style="background:linear-gradient(135deg,rgba(204,255,0,.1),rgba(176,132,232,.1));padding:12px 14px;border-radius:8px;margin:10px 0;font-size:.85em;color:#6B5B88">'+
+        '<strong>Numbers:</strong> Visitors: '+(r.eVisitors||'—')+' '+arrow(r.eVisitorsDir||'same')+'  ·  Conv: '+(r.eConv||'—')+'%  ·  Members: '+(r.eMembers||'—')+' '+arrow(r.eMembersDir||'same')+'  ·  Content: '+(r.eContentNum||'0')+' pieces  ·  DMs: '+(r.eDMs||'0')+'  ·  Ad Spend: $'+(r.eAdSpend||'0')+'</div>'+
+        blk('Wins',r.eWins,'#B084E8')+blk('Carry Forward',r.eCarry,'#E8A87C')+blk('Visibility Reflection',r.eReflection,'#7B3FBE');
+    ge('modal').style.display='flex';
 }
+function closeModal(){ ge('modal').style.display='none'; }
 
-function copyShareLink() {
-    var input = ge('shareLinkInput');
-    input.select();
-    navigator.clipboard.writeText(input.value).then(function(){
-        var msg = ge('shareCopiedMsg');
-        msg.style.display = 'block';
-        setTimeout(function(){ msg.style.display = 'none'; }, 4000);
-    }).catch(function(){
-        document.execCommand('copy');
-        var msg = ge('shareCopiedMsg');
-        msg.style.display = 'block';
-        setTimeout(function(){ msg.style.display = 'none'; }, 4000);
-    });
-}
-function clearAllData() {
-    if (confirm('Clear ALL data? This cannot be undone.')) {
-        ['dailyPlannerData','weeklyPlannerData','miscData'].forEach(function(k){ localStorage.removeItem(k); });
-        location.reload();
-    }
-}
+// ── Export / clear ────────────────────────────────────────────────────
+function exportJSON(){ var b=new Blob([JSON.stringify({daily:D,weekly:W,misc:M},null,2)],{type:'application/json'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='visibility-by-design-'+TODAY+'.json'; a.click(); }
+function clearAll(){ if(confirm('Clear ALL data? Cannot be undone.')){ ['vbd_daily','vbd_weekly','vbd_misc'].forEach(function(k){localStorage.removeItem(k);}); location.reload(); } }
 
-// ── Weekly save / load ─────────────────────────────────────────────────
-function saveWeeklyData() {
-    var w = weeklyData[currentWeekStart];
-    w.attract = gv('weeklyAttract'); w.nurture = gv('weeklyNurture');
-    w.convert = gv('weeklyConvert'); w.deliver = gv('weeklyDeliver');
-    w.wentWell = gv('weeklyWentWell'); w.stuck = gv('weeklyStuck');
-    w.miracleSpiritual = gv('miracleSpiritual'); w.miraclePhysical = gv('miraclePhysical');
-    w.miracleCertainty = gv('miracleCertainty'); w.miraclePrayer = gv('miraclePrayer');
-    localStorage.setItem('weeklyPlannerData', JSON.stringify(weeklyData));
-    showSaveNotice();
-}
-function loadWeeklyData() {
-    var w = weeklyData[currentWeekStart];
-    ge('weekDisplay').textContent = getWeekDisplay(currentWeekStart);
-    sv('weeklyAttract',w.attract); sv('weeklyNurture',w.nurture);
-    sv('weeklyConvert',w.convert); sv('weeklyDeliver',w.deliver);
-    sv('weeklyWentWell',w.wentWell); sv('weeklyStuck',w.stuck);
-    sv('miracleSpiritual',w.miracleSpiritual); sv('miraclePhysical',w.miraclePhysical);
-    sv('miracleCertainty',w.miracleCertainty); sv('miraclePrayer',w.miraclePrayer);
-    var sel = ge('challengeWeekSelect');
-    if (sel && w.challengeWeek) sel.value = w.challengeWeek;
-}
-
-// ── Event listeners ────────────────────────────────────────────────────
-document.addEventListener('input', function(e){
-    var t = e.target;
-    if (t.closest('#weekly')) { saveWeeklyData(); }
-    else if (t.closest('#evening')) { saveDebriefData(); }
-    else if (t.closest('#morning')) { saveMorningData(); }
+// ── Event listeners ───────────────────────────────────────────────────
+document.addEventListener('input',function(e){
+    var t=e.target;
+    if(t.closest('#morning')) saveMorning();
+    else if(t.closest('#evening')) saveEvening();
+    else if(t.closest('#weekly')) saveWeekly();
 });
-document.addEventListener('change', function(e){
-    var t = e.target;
-    if (t.closest('#weekly')) { saveWeeklyData(); }
-    else if (t.closest('#evening')) { saveDebriefData(); }
-    else if (t.closest('#morning')) { saveMorningData(); }
+document.addEventListener('change',function(e){
+    var t=e.target;
+    if(t.closest('#morning')) saveMorning();
+    else if(t.closest('#evening')) saveEvening();
+    else if(t.closest('#weekly')) saveWeekly();
 });
 
-// ── Init ───────────────────────────────────────────────────────────────
-ge('currentDate').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-loadMorningData();
-loadWeeklyData();
-loadDebriefData();
-updateMorningDateDisplay();
-updateDebriefDateDisplay();
-updateChallengeDayDisplay();
-renderCheckins();
+// ── Init ──────────────────────────────────────────────────────────────
+loadMorning();
+loadWeekly();
+loadEvening();
+updCIDate();
+updChallenge();
 </script>
 </body>
 </html>
