@@ -297,17 +297,38 @@ button:hover{transform:translateY(-2px)}
 <div id="checkin" class="panel">
     <h2>Daily Check-In Post</h2>
     <div class="info">
-        This post is generated from <strong>yesterday's Evening Debrief</strong>. It's short by design — just your key stats, your content link, and one visibility insight. Post it in the Skool daily check-in thread each morning with a <strong>screenshot of your Skool analytics</strong> and your <strong>Daily Visibility System link</strong>.
+        Fill in yesterday's stats each morning, add your insight, and generate your check-in comment. Post it in the Skool thread with a <strong>screenshot of your Skool analytics</strong>.
     </div>
 
-    <div style="background:linear-gradient(135deg,rgba(204,255,0,.1),rgba(176,132,232,.1));border:2px solid rgba(204,255,0,.35);border-radius:12px;padding:16px 20px;margin:16px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <label style="color:#6B5B88;font-weight:700;font-size:.9em;white-space:nowrap">Pulling data from:</label>
-        <div style="display:flex;align-items:center;gap:10px">
-            <button onclick="chCheckinDate(-1)" style="margin:0;padding:7px 14px;font-size:.82em">← Prev</button>
-            <span id="ciDateLabel" style="font-weight:700;color:#2a2a2a;font-size:.95em"></span>
-            <button onclick="chCheckinDate(1)" style="margin:0;padding:7px 14px;font-size:.82em">Next →</button>
+    <!-- Date nav -->
+    <div class="day-nav">
+        <button onclick="chCIDay(-1)">← Prev</button>
+        <div class="day-nav-mid"><div class="dn-date" id="ciDayLabel"></div><div class="dn-status" id="ciDayStatus"></div></div>
+        <button onclick="chCIDay(1)">Next →</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="sec">
+        <h3 style="margin-top:0">📊 Yesterday's Skool Stats</h3>
+        <div class="num-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
+            <div class="num-card"><label>Visitors</label><input type="number" id="ciVisitors" min="0" placeholder="0" oninput="saveCIDay()"><div style="margin-top:6px"><select id="ciVisitorsDir" onchange="saveCIDay()" style="width:100%;padding:6px;border:1px solid rgba(232,213,242,.6);border-radius:6px;font-family:inherit;font-size:.82em;background:#fff;color:#6B5B88"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div></div>
+            <div class="num-card"><label>Conversion Rate %</label><input type="number" id="ciConv" min="0" step="0.1" placeholder="0" oninput="saveCIDay()"><div style="margin-top:6px"><select id="ciConvDir" onchange="saveCIDay()" style="width:100%;padding:6px;border:1px solid rgba(232,213,242,.6);border-radius:6px;font-family:inherit;font-size:.82em;background:#fff;color:#6B5B88"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div></div>
+            <div class="num-card"><label>Members</label><input type="number" id="ciMembers" min="0" placeholder="0" oninput="saveCIDay()"><div style="margin-top:6px"><select id="ciMembersDir" onchange="saveCIDay()" style="width:100%;padding:6px;border:1px solid rgba(232,213,242,.6);border-radius:6px;font-family:inherit;font-size:.82em;background:#fff;color:#6B5B88"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div></div>
+            <div class="num-card"><label>Profile Activity</label><input type="number" id="ciProfile" min="0" placeholder="0" oninput="saveCIDay()"><div style="margin-top:6px"><select id="ciProfileDir" onchange="saveCIDay()" style="width:100%;padding:6px;border:1px solid rgba(232,213,242,.6);border-radius:6px;font-family:inherit;font-size:.82em;background:#fff;color:#6B5B88"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div></div>
         </div>
-        <span id="ciDataStatus" style="font-size:.82em;color:#8B7BA8;font-style:italic"></span>
+    </div>
+
+    <!-- Content link -->
+    <div class="sec">
+        <h3 style="margin-top:0">🔗 Yesterday's Content Link</h3>
+        <input type="url" id="ciContentLink" placeholder="https://..." style="width:100%;margin-bottom:10px" oninput="saveCIDay()">
+        <div class="type-pills" id="ciTypePills"></div>
+    </div>
+
+    <!-- Insight -->
+    <div class="sec">
+        <h3 style="margin-top:0">👁 Any insights or ahas about visibility?</h3>
+        <textarea id="ciInsight" placeholder="One sentence or a full download — whatever came up..." style="min-height:100px" oninput="saveCIDay()"></textarea>
     </div>
 
     <button onclick="generatePost()">✨ Generate My Check-In Post</button>
@@ -316,7 +337,7 @@ button:hover{transform:translateY(-2px)}
         <h3>Your Check-In Post — copy and paste into Skool</h3>
         <div class="post-box" id="ciPostText"></div>
         <button onclick="copyPost()">📋 Copy Post</button>
-        <div id="ciCopied" style="display:none;color:#7B3FBE;font-weight:600;margin-top:8px;font-size:.9em">✓ Copied! Paste into Skool.</div>
+        <div id="ciCopied" style="display:none;color:#7B3FBE;font-weight:600;margin-top:8px;font-size:.9em"></div>
 
         <div style="margin-top:28px;padding-top:24px;border-top:2px solid rgba(232,213,242,.5)">
             <label class="field-label">Paste your Skool comment link after you post</label>
@@ -412,9 +433,8 @@ var W = JSON.parse(localStorage.getItem('vbd_weekly') || '{}');
 var M = JSON.parse(localStorage.getItem('vbd_misc') || '{}');
 
 var TODAY = new Date().toISOString().split('T')[0];
-var mDay  = TODAY;   // morning nav date
-var eDay  = TODAY;   // evening nav date
-var ciDay = yesterday(TODAY); // check-in pulls from yesterday
+var mDay  = TODAY;
+var eDay  = TODAY;
 var wkStart = wkOf(new Date());
 var cfFilter = 'all';
 var selectedType = '';
@@ -467,7 +487,7 @@ function go(id,btn){
     if(id==='progress'){ renderStats(); renderGrid(); updChallenge(); }
     if(id==='links') renderLT();
     if(id==='snap') loadSnap();
-    if(id==='checkin') updCIDate();
+    if(id==='checkin') loadCIDay();
 }
 
 // ── Date display helpers ─────────────────────────────────────────────
@@ -548,49 +568,97 @@ function completeEvening(){ saveEvening(); D[eDay].eDone=true; save(); updEvenin
 })();
 
 // ── Check-In Post ────────────────────────────────────────────────────
-function updCIDate(){
-    ge('ciDateLabel').textContent = fmtShort(ciDay) + "'s evening data";
-    initDay(ciDay);
-    var r=D[ciDay];
-    var hasData = r && (r.eDone || r.eWins || r.eVisitors);
-    ge('ciDataStatus').textContent = hasData ? '✓ Evening debrief found' : 'No evening debrief yet for this date';
-    // load skool link if saved
-    var dayNum = getDayNum(ciDay);
-    if(dayNum && M.skoolLinks[dayNum]) sv('ciSkoolLink', M.skoolLinks[dayNum]);
-    else sv('ciSkoolLink','');
+var ciDay = TODAY;
+var ciSelectedType = '';
+
+function initCIDay(ds){
+    if(!M.ciData) M.ciData = {};
+    if(!M.ciData[ds]) M.ciData[ds] = {
+        visitors:'', visitorsDir:'up', conv:'', convDir:'up',
+        members:'', membersDir:'up', profile:'', profileDir:'up',
+        contentLink:'', contentType:'', insight:''
+    };
 }
-function chCheckinDate(dir){ ciDay=addDays(ciDay,dir); initDay(ciDay); updCIDate(); ge('ciOutput').style.display='none'; }
+function loadCIDay(){
+    initCIDay(ciDay);
+    var r = M.ciData[ciDay];
+    sv('ciVisitors', r.visitors); sv('ciVisitorsDir', r.visitorsDir);
+    sv('ciConv', r.conv); sv('ciConvDir', r.convDir);
+    sv('ciMembers', r.members); sv('ciMembersDir', r.membersDir);
+    sv('ciProfile', r.profile); sv('ciProfileDir', r.profileDir);
+    sv('ciContentLink', r.contentLink);
+    sv('ciInsight', r.insight);
+    ciSelectedType = r.contentType || '';
+    document.querySelectorAll('.ci-type-pill').forEach(function(p){
+        p.classList.toggle('sel', p.dataset.type === ciSelectedType);
+    });
+    var dayNum = getDayNum(ciDay);
+    ge('ciDayLabel').textContent = fmtLong(ciDay);
+    ge('ciDayStatus').textContent = dayNum ? 'Challenge Day ' + dayNum : '';
+    if(M.skoolLinks && M.skoolLinks[dayNum]) sv('ciSkoolLink', M.skoolLinks[dayNum]);
+    else sv('ciSkoolLink','');
+    ge('ciOutput').style.display = 'none';
+}
+function saveCIDay(){
+    initCIDay(ciDay);
+    var r = M.ciData[ciDay];
+    r.visitors = gv('ciVisitors'); r.visitorsDir = gv('ciVisitorsDir');
+    r.conv = gv('ciConv'); r.convDir = gv('ciConvDir');
+    r.members = gv('ciMembers'); r.membersDir = gv('ciMembersDir');
+    r.profile = gv('ciProfile'); r.profileDir = gv('ciProfileDir');
+    r.contentLink = gv('ciContentLink');
+    r.contentType = ciSelectedType;
+    r.insight = gv('ciInsight');
+    save();
+}
+function chCIDay(dir){ saveCIDay(); ciDay = addDays(ciDay, dir); loadCIDay(); }
+
+// Build CI content type pills
+(function(){
+    var c = ge('ciTypePills');
+    if(!c) return;
+    ['Post','Reel','TikTok','YouTube','Carousel','LinkedIn','Ad'].forEach(function(t){
+        var p = document.createElement('div');
+        p.className = 'type-pill ci-type-pill'; p.textContent = t; p.dataset.type = t;
+        p.onclick = function(){
+            ciSelectedType = (ciSelectedType === t) ? '' : t;
+            document.querySelectorAll('.ci-type-pill').forEach(function(x){ x.classList.toggle('sel', x.dataset.type === ciSelectedType); });
+            saveCIDay();
+        };
+        c.appendChild(p);
+    });
+})();
 
 function generatePost(){
-    initDay(ciDay);
-    var r=D[ciDay];
-    var checkInDate = addDays(ciDay,1);
-    var dayNum = getDayNum(checkInDate) || '?';
-    var dateStr = new Date(checkInDate).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-    var typeStr = r.eContentType ? ' '+r.eContentType : '';
-    var dirArrow = function(v){ return v==='up'?' ↑':v==='down'?' ↓':' →'; };
-    // Use \n\n so Skool renders each line separately
+    saveCIDay();
+    initCIDay(ciDay);
+    var r = M.ciData[ciDay];
+    var dayNum = getDayNum(ciDay) || '?';
+    var dateStr = new Date(ciDay).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    var typeStr = r.contentType ? ' ' + r.contentType : '';
+    var dirArrow = function(v){ return v==='up' ? ' ↑' : v==='down' ? ' ↓' : ' →'; };
     var lines = [
-        '✨ DAY '+dayNum+' CHECK-IN — Visibility By Design Challenge',
-        '📅 '+dateStr,
-        '👤 Visitors: '+(r.eVisitors||'—')+dirArrow(r.eVisitorsDir||'same'),
-        '📈 Conversion: '+(r.eConv||'—')+'%'+dirArrow(r.eConvDir||'same'),
-        '🌟 Members: '+(r.eMembers||'—')+dirArrow(r.eMembersDir||'same'),
-        '⚡ Profile Activity: '+(r.eProfile||'—')+dirArrow(r.eProfileDir||'same'),
-        '🔗 Yesterday\'s'+typeStr+': '+(r.eContentLink||'—'),
-        '👁 '+(r.eReflection||'—')
+        '✨ DAY ' + dayNum + ' CHECK-IN — Visibility By Design Challenge',
+        '📅 ' + dateStr,
+        '👤 Visitors: ' + (r.visitors||'—') + dirArrow(r.visitorsDir||'same'),
+        '📈 Conversion: ' + (r.conv||'—') + '%' + dirArrow(r.convDir||'same'),
+        '🌟 Members: ' + (r.members||'—') + dirArrow(r.membersDir||'same'),
+        '⚡ Profile Activity: ' + (r.profile||'—') + dirArrow(r.profileDir||'same'),
+        '🔗 Yesterday\'s' + typeStr + ': ' + (r.contentLink||'—'),
+        '👁 ' + (r.insight||'—')
     ];
     var box = ge('ciPostText');
     box.innerHTML = '';
-    lines.forEach(function(line, i){
+    lines.forEach(function(line){
         var p = document.createElement('p');
         p.style.margin = '0 0 6px 0';
         p.textContent = line;
         box.appendChild(p);
     });
     ge('ciOutput').style.display = 'block';
-    ge('ciOutput').scrollIntoView({behavior:'smooth',block:'start'});
+    ge('ciOutput').scrollIntoView({behavior:'smooth', block:'start'});
 }
+
 function copyPost(){
     var box = ge('ciPostText');
     var range = document.createRange();
@@ -608,13 +676,15 @@ function copyPost(){
     m.style.display = 'block';
     setTimeout(function(){ m.style.display='none'; }, 4000);
 }
+
 function saveSkoolLinkFromCI(){
-    var dayNum=getDayNum(ciDay);
+    var dayNum = getDayNum(ciDay);
     if(!dayNum) return;
-    M.skoolLinks[dayNum]=gv('ciSkoolLink');
+    if(!M.skoolLinks) M.skoolLinks = {};
+    M.skoolLinks[dayNum] = gv('ciSkoolLink');
     save();
-    ge('ciSkoolSaved').style.display='block';
-    setTimeout(function(){ ge('ciSkoolSaved').style.display='none'; },3000);
+    ge('ciSkoolSaved').style.display = 'block';
+    setTimeout(function(){ ge('ciSkoolSaved').style.display='none'; }, 3000);
 }
 
 // ── Share link ────────────────────────────────────────────────────────
@@ -798,7 +868,7 @@ document.addEventListener('change',function(e){
 loadMorning();
 loadWeekly();
 loadEvening();
-updCIDate();
+loadCIDay();
 updChallenge();
 </script>
 </body>
