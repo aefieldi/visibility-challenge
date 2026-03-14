@@ -277,17 +277,16 @@ button:hover{transform:translateY(-2px)}
 
     <!-- VISIBILITY REFLECTION -->
     <div class="sec" style="border-color:rgba(176,132,232,.35)">
-        <h3 style="margin-top:0">👁 Visibility Reflection</h3>
-        <div class="info" style="margin-top:0;margin-bottom:14px">Answer whatever resonates — one sentence or a full download. You can also drop a <strong>Loom link</strong> below if it's easier to think out loud.</div>
-        <div style="background:rgba(248,245,255,.7);border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:.88em;color:#6B5B88;line-height:1.9">
-            <strong style="color:#7B5FA8">Prompts to consider:</strong><br>
-            · How did being visible feel today?<br>
-            · Any resistance or old stories that came up?<br>
-            · What are you noticing about showing up consistently?<br>
-            · Any insights, downloads, or breakthroughs?<br>
-            · What's getting easier — and what's still hard?
-        </div>
-        <textarea id="eReflection" placeholder="Write your reflection here — or paste a Loom link and add a quick note..." style="min-height:140px"></textarea>
+        <h3 style="margin-top:0">👁 Questions or Insights About Visibility</h3>
+        <div class="info" style="margin-top:0;margin-bottom:14px">Any questions that came up today? Any ahas or insights about showing up? Drop them here — Amanda reads these.</div>
+        <textarea id="eReflection" placeholder="e.g. I'm wondering if... / I noticed that... / Something that clicked today..." style="min-height:140px"></textarea>
+    </div>
+
+    <!-- CONTENT IDEAS -->
+    <div class="sec" style="border-color:rgba(204,255,0,.4)">
+        <h3 style="margin-top:0">💡 Content Ideas from Today</h3>
+        <p style="color:#8B7BA8;font-size:.88em;margin-bottom:10px">Is there anything you did, learned, or experienced today that you could share with your audience? These go straight into your Content Bank.</p>
+        <textarea id="eContentIdeas" placeholder="e.g. I learned that... / Today I tried... / Something my audience would find useful..." style="min-height:110px"></textarea>
     </div>
 
     <button onclick="completeEvening()">✓ Complete Evening Debrief</button>
@@ -362,13 +361,8 @@ button:hover{transform:translateY(-2px)}
 
 <!-- ═══════════════ CONTENT BANK ═══════════════ -->
 <div id="content" class="panel">
-    <h2>Content Bank</h2>
-    <div style="text-align:center;font-style:italic;color:#6B5B88;font-size:1.1em;padding:20px;background:linear-gradient(135deg,rgba(232,213,242,.3),rgba(213,232,247,.3));border-radius:14px;border:2px solid rgba(204,255,0,.3);margin-bottom:22px">"Your daily experience IS your content. Every insight, struggle, and breakthrough is teaching material."</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-        <button onclick="setCF('all',this)" class="btn-sm" id="cf-all">All</button>
-        <button onclick="setCF('reflection',this)" class="btn-sm" style="background:linear-gradient(135deg,#B084E8,#6BA3E8)" id="cf-reflection">Visibility Reflections</button>
-        <button onclick="setCF('ideas',this)" class="btn-sm" style="background:linear-gradient(135deg,#6BA3E8,#A8D5E2)" id="cf-ideas">Other Ideas</button>
-    </div>
+    <h2>💡 Content Bank</h2>
+    <div style="text-align:center;font-style:italic;color:#6B5B88;font-size:1.1em;padding:20px;background:linear-gradient(135deg,rgba(232,213,242,.3),rgba(213,232,247,.3));border-radius:14px;border:2px solid rgba(204,255,0,.3);margin-bottom:22px">"Your daily experience IS your content. Every insight, lesson, and experiment is teaching material."</div>
     <div id="cbList"></div>
     <button onclick="exportCB()" style="background:linear-gradient(135deg,#E8C48B,#E8B5C8)">Export Content Bank</button>
 </div>
@@ -759,31 +753,27 @@ function renderGrid(){
 }
 
 // ── Content bank ───────────────────────────────────────────────────────
-function setCF(f){ contentFilter=f; renderCB(); }
-var contentFilter='all';
 function renderCB(){
     var c=ge('cbList'); if(!c)return;
     var dates=Object.keys(D).sort().reverse();
     var cards=[];
     dates.forEach(function(ds){
-        var r=D[ds]; var items=[];
-        if((contentFilter==='all'||contentFilter==='reflection')&&r.eReflection&&r.eReflection.trim())
-            items.push({label:'Visibility Reflection',color:'#B084E8',text:r.eReflection});
-        if((contentFilter==='all'||contentFilter==='ideas')&&r.eContentIdeas&&r.eContentIdeas.trim())
-            items.push({label:'Content Ideas',color:'#6BA3E8',text:r.eContentIdeas});
-        if(items.length) cards.push({ds:ds,items:items});
+        var r=D[ds];
+        if(r.eContentIdeas&&r.eContentIdeas.trim()) cards.push({ds:ds,text:r.eContentIdeas});
     });
-    if(!cards.length){ c.innerHTML='<div style="text-align:center;padding:50px 20px;color:#aaa"><p style="font-size:1.1em;margin-bottom:8px">No content yet</p><p style="font-style:italic">Complete your evening debriefs to start building your bank.</p></div>'; return; }
+    if(!cards.length){ c.innerHTML='<div style="text-align:center;padding:50px 20px;color:#aaa"><p style="font-size:1.1em;margin-bottom:8px">No content ideas yet</p><p style="font-style:italic">After your evening debrief, add anything you could share with your audience — it shows up here.</p></div>'; return; }
     c.innerHTML=cards.map(function(card){
-        return'<div style="background:#fff;padding:22px;border-radius:15px;margin-bottom:18px;border-left:4px solid #CCFF00;box-shadow:0 4px 12px rgba(200,181,232,.18)">'+
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><strong style="color:#6B5B88">'+fmtShort(card.ds)+'</strong><button onclick="openDay(\''+card.ds+'\')" class="btn-sm" style="margin:0;padding:7px 14px">Full Day</button></div>'+
-        card.items.map(function(it){ return'<div style="margin-bottom:10px;padding:12px 14px;background:rgba(248,245,255,.8);border-left:4px solid '+it.color+';border-radius:10px"><div style="font-size:.75em;font-weight:700;color:'+it.color+';margin-bottom:4px;text-transform:uppercase">'+it.label+'</div><div style="font-size:.92em;color:#2a2a2a;line-height:1.65;white-space:pre-wrap">'+it.text+'</div></div>'; }).join('')+
+        return '<div style="background:#fff;padding:22px;border-radius:15px;margin-bottom:14px;border-left:4px solid #CCFF00;box-shadow:0 4px 12px rgba(200,181,232,.18)">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+        '<strong style="color:#6B5B88">'+fmtShort(card.ds)+'</strong>'+
+        '<button onclick="openDay(\''+card.ds+'\')" class="btn-sm" style="margin:0;padding:7px 14px">Full Day</button></div>'+
+        '<div style="font-size:.92em;color:#2a2a2a;line-height:1.7;white-space:pre-wrap">'+card.text+'</div>'+
         '</div>';
     }).join('');
 }
 function exportCB(){
     var lines=['CONTENT BANK — '+new Date().toLocaleDateString(),'='.repeat(56)];
-    Object.keys(D).sort().forEach(function(ds){ var r=D[ds]; var parts=[]; if(r.eReflection&&r.eReflection.trim())parts.push('VISIBILITY REFLECTION:\n'+r.eReflection); if(r.eContentIdeas&&r.eContentIdeas.trim())parts.push('OTHER IDEAS:\n'+r.eContentIdeas); if(parts.length){lines.push('');lines.push('=== '+fmtLong(ds)+' ===');lines.push(parts.join('\n\n'));} });
+    Object.keys(D).sort().forEach(function(ds){ var r=D[ds]; if(r.eContentIdeas&&r.eContentIdeas.trim()){ lines.push(''); lines.push('=== '+fmtLong(ds)+' ==='); lines.push(r.eContentIdeas); } });
     if(lines.length<=2){alert('Nothing to export yet.');return;}
     var b=new Blob([lines.join('\n')],{type:'text/plain'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='content-bank-'+TODAY+'.txt'; a.click();
 }
