@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visibility By Design — Daily System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --p: #7F77DD;
+  --p2: #A89FEC;
+  --pk: #D4537E;
+  --lime: #C8FF00;
+  --lime2: #A8D800;
+  --bg: #f7f5ff;
+  --card: #ffffff;
+  --ink: #1e1b2e;
+  --muted: #7B789A;
+  --border: rgba(127,119,221,0.15);
+  --border2: rgba(127,119,221,0.3);
+  --glass: rgba(255,255,255,0.7);
+  --shadow: 0 4px 24px rgba(127,119,221,0.12);
+  --shadow-lg: 0 12px 48px rgba(127,119,221,0.18);
+  --radius: 18px;
+  --radius-sm: 10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:60px}
+
+/* ── Noise texture overlay ── */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
+
+/* ── Background gradient blobs ── */
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 10% 0%,rgba(127,119,221,0.08) 0%,transparent 60%),radial-gradient(ellipse 50% 60% at 90% 100%,rgba(212,83,126,0.06) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 50% 50%,rgba(200,255,0,0.04) 0%,transparent 70%);pointer-events:none;z-index:0}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+
+/* ── MOMENTUM BAR ── */
+#momentumBar{background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(127,119,221,0.08);transition:all .3s}
+.mb-inner{max-width:1080px;margin:0 auto;padding:0 20px}
+.mb-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 0;cursor:pointer;user-select:none}
+.mb-title{font-family:'Playfair Display',serif;font-size:1.05em;font-weight:700;color:var(--p);display:flex;align-items:center;gap:8px}
+.mb-toggle-btn{background:none;border:1px solid var(--border2);border-radius:20px;padding:4px 12px;font-size:.75em;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .2s;margin:0}
+.mb-toggle-btn:hover{background:var(--bg);transform:none}
+.mb-content{padding-bottom:14px;display:block}
+.mb-content.collapsed{display:none}
+.mb-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px}
+.mb-stat{background:var(--bg);border-radius:var(--radius-sm);padding:10px 14px;border:1px solid var(--border)}
+.mb-stat-n{font-family:'Playfair Display',serif;font-size:1.6em;font-weight:700;color:var(--p);line-height:1}
+.mb-stat-l{font-size:.7em;color:var(--muted);font-weight:500;margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+.mb-bars{display:flex;flex-direction:column;gap:8px}
+.mb-bar-row{display:flex;align-items:center;gap:10px}
+.mb-bar-label{font-size:.72em;color:var(--muted);font-weight:600;min-width:120px;text-transform:uppercase;letter-spacing:.03em}
+.mb-bar-track{flex:1;height:7px;background:rgba(127,119,221,0.1);border-radius:10px;overflow:hidden}
+.mb-bar-fill{height:100%;border-radius:10px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.mb-bar-val{font-size:.75em;font-weight:700;color:var(--ink);min-width:32px;text-align:right}
+.streak-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,var(--lime),var(--lime2));color:var(--ink);font-weight:700;font-size:.82em;padding:5px 14px;border-radius:20px;margin-left:10px}
+
+/* ── HEADER ── */
+.site-header{padding:40px 0 20px;text-align:center}
+.site-header h1{font-family:'Playfair Display',serif;font-size:clamp(1.8em,4vw,3em);font-weight:900;background:linear-gradient(135deg,var(--p) 0%,var(--pk) 60%,var(--p2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.15;margin-bottom:8px}
+.site-header .sub{color:var(--muted);font-size:.95em;font-weight:400}
+.day-chip{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--lime);font-weight:700;font-size:.82em;padding:6px 16px;border-radius:20px;margin-top:12px}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:24px 0;padding:0 4px}
+.tab-btn{padding:9px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:30px;cursor:pointer;font-size:.82em;font-weight:600;color:var(--muted);transition:all .25s;font-family:inherit;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.tab-btn:hover{border-color:var(--p);color:var(--p);transform:translateY(-1px)}
+.tab-btn.active{background:var(--ink);color:var(--lime);border-color:var(--ink)}
+
+/* ── PANELS ── */
+.panel{display:none;animation:panelIn .35s ease}
+.panel.active{display:block}
+@keyframes panelIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CARDS ── */
+.card{background:var(--card);border-radius:var(--radius);padding:28px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(180deg,var(--p),var(--pk))}
+.card.lime::before{background:linear-gradient(180deg,var(--lime),var(--lime2))}
+.card.pink::before{background:linear-gradient(180deg,var(--pk),#E8829E)}
+.card.plain::before{display:none}
+.card-title{font-family:'Playfair Display',serif;font-size:1.15em;font-weight:700;color:var(--ink);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.card-sub{font-size:.82em;color:var(--muted);margin-bottom:16px;line-height:1.5}
+
+/* ── SECTION HEADING ── */
+.sh{font-family:'Playfair Display',serif;font-size:1.5em;font-weight:700;color:var(--ink);margin:32px 0 20px;display:flex;align-items:center;gap:10px}
+.sh::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── FORM ELEMENTS ── */
+label.fl{display:block;font-size:.75em;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+textarea,input[type=text],input[type=number],input[type=url],input[type=date]{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:.93em;color:var(--ink);background:var(--bg);transition:border-color .2s,box-shadow .2s;outline:none}
+textarea{resize:vertical;min-height:100px;line-height:1.6}
+textarea:focus,input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(127,119,221,0.12)}
+.field{margin-bottom:16px}
+
+/* ── BUTTONS ── */
+button{padding:11px 24px;background:var(--ink);color:var(--lime);border:none;border-radius:30px;cursor:pointer;font-size:.88em;font-weight:700;font-family:inherit;transition:all .25s;letter-spacing:.02em}
+button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(30,27,46,0.2)}
+.btn-p{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff}
+.btn-lime{background:linear-gradient(135deg,var(--lime),var(--lime2));color:var(--ink)}
+.btn-ghost{background:transparent;border:1.5px solid var(--border2);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--p);color:var(--p)}
+.btn-sm{padding:7px 16px;font-size:.78em}
+.btn-danger{background:linear-gradient(135deg,#F8C8D4,#F0A8BC);color:var(--ink)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+/* ── NUM GRID ── */
+.num-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;margin:12px 0}
+.nc{background:var(--bg);border-radius:var(--radius-sm);padding:14px;border:1.5px solid var(--border)}
+.nc label{display:block;font-size:.68em;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.nc input[type=number]{text-align:center;font-size:1.15em;font-weight:700;color:var(--p);background:#fff;padding:8px}
+.nc select{width:100%;margin-top:6px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.78em;background:#fff;color:var(--muted)}
+
+/* ── TYPE PILLS ── */
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pill{padding:5px 13px;border-radius:20px;font-size:.75em;font-weight:700;border:1.5px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s}
+.pill:hover{border-color:var(--p);color:var(--p);background:none;transform:none}
+.pill.sel{background:var(--ink);color:var(--lime);border-color:var(--ink)}
+
+/* ── DAY NAV ── */
+.day-nav{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:20px;border:1px solid var(--border)}
+.day-nav button{margin:0;padding:7px 14px;font-size:.8em;background:var(--card);color:var(--muted);border:1px solid var(--border)}
+.day-nav button:hover{color:var(--p);border-color:var(--p);transform:none;box-shadow:none}
+.dn-mid{text-align:center;flex:1}
+.dn-date{font-weight:700;font-size:.9em;color:var(--ink)}
+.dn-status{font-size:.72em;color:var(--muted);margin-top:2px}
+.today-pill{display:inline-block;background:linear-gradient(135deg,var(--lime),var(--lime2));color:var(--ink);font-size:.68em;font-weight:800;padding:2px 10px;border-radius:10px;margin-left:6px;vertical-align:middle;text-transform:uppercase;letter-spacing:.05em}
+
+/* ── POST BOX ── */
+.post-box{background:var(--bg);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:22px;font-family:'DM Sans',sans-serif;font-size:.92em;line-height:1.8;color:var(--ink);margin:14px 0}
+.post-box p{margin-bottom:4px}
+
+/* ── INFO BOX ── */
+.info-box{background:linear-gradient(135deg,rgba(200,255,0,.08),rgba(127,119,221,.06));border:1px solid rgba(200,255,0,.35);border-radius:var(--radius-sm);padding:12px 16px;color:var(--muted);font-size:.85em;line-height:1.55;margin-bottom:14px}
+
+/* ── TIME TRACKER ── */
+.timer-display{font-family:'Playfair Display',serif;font-size:3em;font-weight:700;color:var(--p);text-align:center;letter-spacing:.05em;padding:16px 0}
+.timer-active{color:var(--pk)}
+.time-log{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.time-entry{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:var(--radius-sm);padding:12px 16px;border:1px solid var(--border);font-size:.85em}
+.te-task{flex:1;font-weight:600;color:var(--ink)}
+.te-time{color:var(--muted);font-size:.78em;font-family:monospace}
+.te-dur{background:var(--ink);color:var(--lime);padding:3px 10px;border-radius:10px;font-size:.72em;font-weight:700}
+.te-del{background:none;border:none;color:#ccc;cursor:pointer;padding:4px 8px;margin:0;font-size:.9em}
+.te-del:hover{color:var(--pk);transform:none;box-shadow:none}
+
+/* ── CHECKLIST ── */
+.check-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.check-row:last-child{border-bottom:none}
+.check-row input[type=checkbox]{width:20px;height:20px;accent-color:var(--lime);flex-shrink:0;cursor:pointer}
+.check-row input[type=text]{flex:1;border:none;background:transparent;padding:0;font-size:.93em;color:var(--ink)}
+.check-row input[type=text]:focus{box-shadow:none;border-bottom:1.5px solid var(--p)}
+.check-row.done .check-row-text{text-decoration:line-through;color:var(--muted)}
+
+/* ── PROGRESS GRID ── */
+.t-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;margin:20px 0}
+.t-cell{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1.5px solid transparent;transition:all .2s;font-size:.8em}
+.t-cell:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.t-none{background:#f0eeff;border-color:rgba(127,119,221,0.15);color:#ccc}
+.t-am{background:rgba(127,119,221,.15);border-color:var(--p);color:var(--p)}
+.t-pm{background:rgba(212,83,126,.12);border-color:var(--pk);color:var(--pk)}
+.t-full{background:linear-gradient(135deg,rgba(200,255,0,.3),rgba(168,216,0,.3));border-color:var(--lime2);color:#5a7000}
+
+/* ── STAT CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+.stat-card{background:var(--card);border-radius:var(--radius-sm);padding:18px;border:1px solid var(--border);text-align:center}
+.stat-n{font-family:'Playfair Display',serif;font-size:2.2em;font-weight:700;background:linear-gradient(135deg,var(--p),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.stat-l{font-size:.7em;color:var(--muted);font-weight:600;margin-top:6px;text-transform:uppercase;letter-spacing:.04em}
+
+/* ── BEFORE/AFTER ── */
+.ba-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.ba-card{border-radius:var(--radius-sm);padding:16px;border:1.5px solid var(--border)}
+.ba-card.before{background:rgba(127,119,221,.05)}
+.ba-card.after{background:rgba(200,255,0,.06);border-color:rgba(200,255,0,.3)}
+.ba-label{font-size:.7em;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;color:var(--muted)}
+.ba-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:.85em}
+.ba-row:last-child{border-bottom:none}
+.ba-key{color:var(--muted)}
+.ba-val{font-weight:700;color:var(--ink)}
+.ba-diff{font-size:.75em;font-weight:700;padding:2px 8px;border-radius:8px}
+.ba-diff.pos{background:rgba(200,255,0,.2);color:#5a7000}
+.ba-diff.neg{background:rgba(212,83,126,.1);color:var(--pk)}
+.ba-diff.zero{background:rgba(127,119,221,.1);color:var(--p)}
+
+/* ── HALL OF WINS ── */
+.win-card{background:linear-gradient(135deg,rgba(200,255,0,.06),rgba(127,119,221,.06));border:1px solid rgba(200,255,0,.3);border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:10px;position:relative}
+.win-date{font-size:.7em;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.win-text{font-size:.9em;color:var(--ink);line-height:1.6}
+.win-star{position:absolute;top:14px;right:16px;font-size:1.1em}
+
+/* ── ENERGY RATING ── */
+.energy-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.e-btn{padding:8px 14px;border-radius:20px;font-size:.82em;font-weight:700;border:1.5px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:all .2s;margin:0}
+.e-btn:hover{border-color:var(--p);color:var(--p);transform:none;box-shadow:none}
+.e-btn.sel{background:var(--ink);color:var(--lime);border-color:var(--ink)}
+
+/* ── CONTENT BANK ── */
+.cb-card{background:var(--card);border-radius:var(--radius-sm);padding:18px;border:1px solid var(--border);margin-bottom:12px;border-left:3px solid var(--lime2)}
+.cb-date{font-size:.7em;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.cb-text{font-size:.9em;color:var(--ink);line-height:1.7;white-space:pre-wrap}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(30,27,46,.7);backdrop-filter:blur(4px);z-index:3000;align-items:center;justify-content:center;padding:20px}
+.modal-inner{background:var(--card);border-radius:var(--radius);padding:32px;max-width:700px;width:100%;max-height:88vh;overflow-y:auto;position:relative;box-shadow:var(--shadow-lg)}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--bg);border:1px solid var(--border);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1em;color:var(--muted);margin:0;padding:0}
+.modal-close:hover{background:var(--pk);color:#fff;border-color:var(--pk);transform:none}
+
+/* ── DAY 1 ONBOARDING ── */
+#onboardModal .modal-inner{max-width:560px}
+.onboard-step{display:none}
+.onboard-step.active{display:block}
+
+/* ── SAVE PILL ── */
+.save-pill{position:fixed;bottom:24px;right:24px;background:var(--ink);color:var(--lime);padding:10px 22px;border-radius:20px;opacity:0;transition:opacity .3s;z-index:1000;font-weight:700;font-size:.82em;pointer-events:none}
+.save-pill.show{opacity:1}
+
+/* ── CONFETTI ── */
+.confetti-piece{position:fixed;width:8px;height:8px;top:-10px;animation:confettiFall linear forwards;z-index:9999;pointer-events:none;border-radius:2px}
+@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* ── SHARE ROW ── */
+.share-row{display:flex;gap:8px;margin-top:10px}
+.share-row input{flex:1;font-family:monospace;font-size:.75em;background:var(--bg);border-radius:var(--radius-sm)}
+.share-row button{margin:0;white-space:nowrap;padding:10px 18px;font-size:.82em}
+
+/* ── PHASE BANNER ── */
+.phase-banner{border-radius:var(--radius-sm);padding:14px 20px;margin-bottom:20px;font-size:.88em;font-weight:600;display:flex;align-items:center;gap:10px}
+.phase-1{background:rgba(127,119,221,.1);color:var(--p);border:1px solid rgba(127,119,221,.2)}
+.phase-2{background:rgba(212,83,126,.08);color:var(--pk);border:1px solid rgba(212,83,126,.2)}
+.phase-3{background:linear-gradient(135deg,rgba(200,255,0,.15),rgba(168,216,0,.15));color:#5a7000;border:1px solid rgba(200,255,0,.4)}
+
+/* ── LINK TRACKER ── */
+.lt-row{background:var(--card);border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden;margin-bottom:8px}
+.lt-head{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--bg);border-bottom:1px solid var(--border)}
+.lt-day{font-weight:800;font-size:.85em;color:var(--p);min-width:56px}
+.lt-date{font-size:.72em;color:var(--muted)}
+.lt-body{padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.lt-field{display:flex;align-items:center;gap:8px}
+.lt-lbl{font-size:.7em;font-weight:700;text-transform:uppercase;letter-spacing:.03em;min-width:96px}
+.lt-field input{flex:1;font-size:.82em;padding:6px 10px;background:var(--bg)}
+.lt-link{font-size:.75em;font-weight:700;text-decoration:none;padding:4px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--muted);white-space:nowrap}
+.lt-link:hover{color:var(--p);border-color:var(--p)}
+
+/* ── PROGRESS BAR (reusable) ── */
+.prog-bar{background:rgba(127,119,221,.1);border-radius:10px;height:8px;overflow:hidden;flex:1}
+.prog-fill{height:100%;border-radius:10px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.prog-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.prog-label{font-size:.75em;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;min-width:130px}
+.prog-val{font-size:.78em;font-weight:700;color:var(--ink);min-width:36px;text-align:right}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .ba-grid{grid-template-columns:1fr}
+  .mb-stats{grid-template-columns:repeat(2,1fr)}
+  .site-header h1{font-size:1.7em}
+  .num-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ MOMENTUM BAR ══════════════════ -->
+<div id="momentumBar">
+  <div class="mb-inner">
+    <div class="mb-toggle" onclick="toggleMB()">
+      <div class="mb-title">
+        ✨ Visibility By Design
+        <span id="streakBadge" class="streak-badge" style="display:none">🔥 <span id="streakNum">0</span> day streak</span>
+      </div>
+      <button class="mb-toggle-btn" id="mbToggleBtn">▲ collapse</button>
+    </div>
+    <div class="mb-content" id="mbContent">
+      <div class="mb-stats" id="mbStats"></div>
+      <div class="mb-bars" id="mbBars"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN WRAP ══════════════════ -->
+<div class="wrap">
+
+<div class="site-header">
+  <h1>Daily Visibility System</h1>
+  <div class="sub" id="todayLabel"></div>
+  <div id="dayChip" class="day-chip" style="display:none">📅 <span id="dayChipText"></span></div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="go('morning',this)">🌅 Morning</button>
+  <button class="tab-btn" onclick="go('checkin',this)">📋 Check-In</button>
+  <button class="tab-btn" onclick="go('timer',this)">⏱ Time Tracker</button>
+  <button class="tab-btn" onclick="go('evening',this)">🌙 Evening</button>
+  <button class="tab-btn" onclick="go('content',this)">💡 Content Bank</button>
+  <button class="tab-btn" onclick="go('links',this)">🔗 Links</button>
+  <button class="tab-btn" onclick="go('progress',this)">📈 Progress</button>
+</div>
+
+<!-- ══════════════════ MORNING ══════════════════ -->
+<div id="morning" class="panel active">
+  <div class="day-nav">
+    <button onclick="chDay('m',-1)">← Prev</button>
+    <div class="dn-mid">
+      <div class="dn-date" id="mDate"></div>
+      <div class="dn-status" id="mStatus"></div>
+    </div>
+    <button onclick="chDay('m',1)">Next →</button>
+  </div>
+
+  <div id="mPhaseBanner"></div>
+
+  <div class="card lime">
+    <div class="card-title">🧠 Brain Dump</div>
+    <div class="card-sub">Get everything out of your head — tasks, worries, ideas, all of it. 2 minutes.</div>
+    <textarea id="mDump" placeholder="Everything on your mind right now..." oninput="saveM()"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="card-title">✨ Connect with Your Highest Self</div>
+    <div class="card-sub">Touch your token · Read your letter · Ask: "What do WE focus on today?"</div>
+    <textarea id="mHighSelf" placeholder="What came through..." style="min-height:70px" oninput="saveM()"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚡ What Has Clear Energy Today?</div>
+    <div class="card-sub">From your brain dump — what feels like a clear YES? What's aligned and easeful?</div>
+    <textarea id="mEnergy" placeholder="The things that feel alive and ready..." oninput="saveM()"></textarea>
+  </div>
+
+  <div class="card pink">
+    <div class="card-title">🎯 Top 3 Focus Tasks</div>
+    <div class="card-sub">Just three. These feed your Time Tracker.</div>
+    <div id="taskList">
+      <div class="check-row"><input type="checkbox" id="t1c" onchange="saveM()"><input type="text" id="t1" placeholder="Focus task #1" oninput="saveM()"></div>
+      <div class="check-row"><input type="checkbox" id="t2c" onchange="saveM()"><input type="text" id="t2" placeholder="Focus task #2" oninput="saveM()"></div>
+      <div class="check-row"><input type="checkbox" id="t3c" onchange="saveM()"><input type="text" id="t3" placeholder="Focus task #3" oninput="saveM()"></div>
+    </div>
+  </div>
+
+  <button onclick="completeM()" class="btn-p">✓ Complete Morning Practice</button>
+</div>
+
+<!-- ══════════════════ DAILY CHECK-IN ══════════════════ -->
+<div id="checkin" class="panel">
+  <div class="day-nav">
+    <button onclick="chDay('ci',-1)">← Prev</button>
+    <div class="dn-mid">
+      <div class="dn-date" id="ciDate"></div>
+      <div class="dn-status" id="ciStatus"></div>
+    </div>
+    <button onclick="chDay('ci',1)">Next →</button>
+  </div>
+
+  <div class="info-box">Fill in stats from <strong>yesterday</strong>, add what you learned and your insight, then generate your check-in post.</div>
+
+  <div class="card">
+    <div class="card-title">🎓 Training Watched</div>
+    <div class="card-sub">What did you watch or study yesterday?</div>
+    <div class="field"><label class="fl">Training name</label><input type="text" id="ciTraining" placeholder="e.g. Day 3 — YouTube Visibility" oninput="saveCI()"></div>
+    <div class="field"><label class="fl">Key learnings / ahas</label><textarea id="ciLearnings" placeholder="What clicked? What are you taking into today?" style="min-height:80px" oninput="saveCI()"></textarea></div>
+  </div>
+
+  <div class="card lime">
+    <div class="card-title">📊 Yesterday's Skool Stats</div>
+    <div class="num-grid">
+      <div class="nc"><label>Visitors</label><input type="number" id="ciVisitors" min="0" placeholder="0" oninput="saveCI()"><select id="ciVisitorsDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
+      <div class="nc"><label>Conversion %</label><input type="number" id="ciConv" min="0" step="0.1" placeholder="0" oninput="saveCI()"><select id="ciConvDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
+      <div class="nc"><label>Members</label><input type="number" id="ciMembers" min="0" placeholder="0" oninput="saveCI()"><select id="ciMembersDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
+      <div class="nc"><label>Group Engagement</label><input type="number" id="ciGroupEng" min="0" placeholder="0" oninput="saveCI()"><select id="ciGroupEngDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
+      <div class="nc"><label>Profile Activity</label><input type="number" id="ciProfile" min="0" placeholder="0" oninput="saveCI()"><select id="ciProfileDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎨 Content Published</div>
+    <div class="num-grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
+      <div class="nc"><label>Pieces Published</label><input type="number" id="ciContentNum" min="0" placeholder="0" oninput="saveCI()"></div>
+      <div class="nc"><label>DMs Sent</label><input type="number" id="ciDMs" min="0" placeholder="0" oninput="saveCI()"></div>
+      <div class="nc"><label>Ad Spend ($)</label><input type="number" id="ciAdSpend" min="0" step="0.01" placeholder="0" oninput="saveCI()"></div>
+      <div class="nc"><label>New Ads</label><input type="number" id="ciNewAds" min="0" placeholder="0" oninput="saveCI()"></div>
+    </div>
+    <div class="field" style="margin-top:12px"><label class="fl">Content Link</label>
+      <input type="url" id="ciContentLink" placeholder="https://..." oninput="saveCI()">
+      <div class="pills" id="ciTypePills"></div>
+    </div>
+  </div>
+
+  <div class="card pink">
+    <div class="card-title">👁 Insight or Question About Visibility</div>
+    <div class="card-sub">One thing you noticed, wondered about, or want Amanda to see.</div>
+    <textarea id="ciInsight" placeholder="e.g. I'm noticing that... / Question: why does...?" style="min-height:80px" oninput="saveCI()"></textarea>
+  </div>
+
+  <div class="btn-row">
+    <button onclick="generatePost()" class="btn-p">✨ Generate Check-In Post</button>
+  </div>
+
+  <div id="ciOutput" style="display:none;margin-top:24px">
+    <div class="sh">Your Post</div>
+    <div class="post-box" id="ciPostText"></div>
+    <div class="btn-row">
+      <button onclick="copyPost()" class="btn-lime">📋 Copy Post</button>
+      <div id="ciPostedWrap" style="display:flex;align-items:center;gap:8px;margin-left:4px">
+        <input type="checkbox" id="ciPosted" style="width:18px;height:18px;accent-color:var(--lime)" onchange="saveCI()">
+        <label for="ciPosted" style="font-size:.85em;font-weight:600;color:var(--muted);cursor:pointer">Posted ✓</label>
+      </div>
+    </div>
+    <div id="ciCopied" style="display:none;color:var(--p);font-weight:700;font-size:.85em;margin-top:8px"></div>
+
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+      <label class="fl">Paste your Skool comment link after you post</label>
+      <p style="font-size:.8em;color:var(--muted);margin-bottom:8px">Find your comment → ··· → Copy link → paste here. Auto-saves to Link Tracker.</p>
+      <input type="url" id="ciSkoolLink" placeholder="https://www.skool.com/..." oninput="saveSkoolLink()">
+      <div id="ciSkoolSaved" style="display:none;color:var(--p);font-weight:700;font-size:.82em;margin-top:6px">✓ Saved to Link Tracker</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ TIME TRACKER ══════════════════ -->
+<div id="timer" class="panel">
+  <div class="info-box">Log what you work on and for how long. Prevents perfectionist rabbit holes — when the timer's running, you're focused.</div>
+
+  <div class="card plain" style="text-align:center">
+    <div class="timer-display" id="timerDisplay">00:00:00</div>
+    <div class="field" style="max-width:400px;margin:0 auto 16px">
+      <label class="fl">Task name</label>
+      <input type="text" id="timerTask" placeholder="What are you working on?">
+    </div>
+    <div class="btn-row" style="justify-content:center">
+      <button onclick="startTimer()" id="timerStartBtn" class="btn-p">▶ Start</button>
+      <button onclick="stopTimer()" id="timerStopBtn" style="display:none" class="btn-danger">■ Stop & Log</button>
+    </div>
+    <div id="timerTasks" style="font-size:.82em;color:var(--muted);margin-top:12px"></div>
+  </div>
+
+  <div class="card lime">
+    <div class="card-title">🎯 Today's Top 3 <span style="font-size:.75em;font-weight:500;color:var(--muted)">(from Morning tab)</span></div>
+    <div id="timerTop3" style="font-size:.88em;color:var(--muted);padding:8px 0">Complete your morning practice to see your top 3 tasks here.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Today's Time Log</div>
+    <div class="time-log" id="timeLog"></div>
+    <div id="noTimeLogs" style="text-align:center;padding:20px;color:var(--muted);font-size:.88em">No entries yet today. Start a timer above!</div>
+  </div>
+</div>
+
+<!-- ══════════════════ EVENING ══════════════════ -->
+<div id="evening" class="panel">
+  <div class="day-nav">
+    <button onclick="chDay('e',-1)">← Prev</button>
+    <div class="dn-mid">
+      <div class="dn-date" id="eDate"></div>
+      <div class="dn-status" id="eStatus"></div>
+    </div>
+    <button onclick="chDay('e',1)">Next →</button>
+  </div>
+
+  <div class="card lime">
+    <div class="card-title">🏆 Win of the Day</div>
+    <div class="card-sub">One sentence. What are you most proud of today? Goes into your Hall of Wins.</div>
+    <textarea id="eWinOfDay" placeholder="Today I..." style="min-height:60px" oninput="saveE()"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🏆 Full Wins</div>
+    <div class="card-sub">Everything that moved today — actions taken, content created, conversations started.</div>
+    <textarea id="eWins" placeholder="What did you do, create, send, or show up for?" oninput="saveE()"></textarea>
+  </div>
+
+  <div class="card pink">
+    <div class="card-title">🔄 What Didn't Work / What to Improve</div>
+    <div class="card-sub">No judgment. What will you do differently tomorrow?</div>
+    <textarea id="eImprove" placeholder="What didn't go as planned? What would you change?" oninput="saveE()"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="card-title">👁 Questions or Insights About Visibility</div>
+    <div class="card-sub">Any questions that came up today? Any ahas? Amanda reads these.</div>
+    <textarea id="eReflection" placeholder="I'm wondering if... / Something that clicked..." oninput="saveE()"></textarea>
+  </div>
+
+  <div class="card" style="border:1.5px dashed rgba(200,255,0,.5)">
+    <div class="card-title">💡 Content Ideas from Today</div>
+    <div class="card-sub">Anything you did, learned, or experienced that your audience would find valuable? <strong>Auto-saves to your Content Bank.</strong></div>
+    <textarea id="eContentIdeas" placeholder="e.g. I discovered that... / Today I tried... / My audience would love to know..." oninput="saveE()"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚡ Energy Rating</div>
+    <div class="card-sub">How did today feel overall?</div>
+    <div class="energy-btns" id="energyBtns">
+      <button class="e-btn" data-v="1" onclick="setEnergy(1)">1 😩</button>
+      <button class="e-btn" data-v="2" onclick="setEnergy(2)">2 😔</button>
+      <button class="e-btn" data-v="3" onclick="setEnergy(3)">3 😐</button>
+      <button class="e-btn" data-v="4" onclick="setEnergy(4)">4 🙂</button>
+      <button class="e-btn" data-v="5" onclick="setEnergy(5)">5 😊</button>
+      <button class="e-btn" data-v="6" onclick="setEnergy(6)">6 😄</button>
+      <button class="e-btn" data-v="7" onclick="setEnergy(7)">7 🤩</button>
+      <button class="e-btn" data-v="8" onclick="setEnergy(8)">8 🔥</button>
+      <button class="e-btn" data-v="9" onclick="setEnergy(9)">9 ⚡</button>
+      <button class="e-btn" data-v="10" onclick="setEnergy(10)">10 🌟</button>
+    </div>
+  </div>
+
+  <button onclick="completeE()" class="btn-p">✓ Complete Evening Debrief</button>
+</div>
+
+<!-- ══════════════════ CONTENT BANK ══════════════════ -->
+<div id="content" class="panel">
+  <div class="sh">💡 Content Bank</div>
+  <div class="info-box">"Your daily experience IS your content." — Auto-populated from your Evening Debrief.</div>
+  <div id="cbList"></div>
+  <button onclick="exportCB()" class="btn-ghost btn-sm" style="margin-top:8px">Export as .txt</button>
+</div>
+
+<!-- ══════════════════ LINKS ══════════════════ -->
+<div id="links" class="panel">
+  <div class="sh">🔗 Link Tracker</div>
+  <div id="ltProgress" style="margin-bottom:20px"></div>
+  <div id="ltList"></div>
+</div>
+
+<!-- ══════════════════ PROGRESS ══════════════════ -->
+<div id="progress" class="panel">
+  <div id="progressPhase"></div>
+
+  <div class="sh">📊 Before & After</div>
+  <div class="ba-grid" id="baGrid"></div>
+
+  <div class="sh">🏆 Hall of Wins</div>
+  <div id="hallOfWins"></div>
+
+  <div class="sh">28-Day Map</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:.75em;color:var(--muted)">
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:linear-gradient(135deg,rgba(200,255,0,.3),rgba(168,216,0,.3));border:1.5px solid var(--lime2);display:inline-block"></span>Full day</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:rgba(127,119,221,.15);border:1.5px solid var(--p);display:inline-block"></span>Morning</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:rgba(212,83,126,.12);border:1.5px solid var(--pk);display:inline-block"></span>Evening</span>
+  </div>
+  <div class="t-grid" id="tGrid"></div>
+
+  <div class="sh">📈 Stats</div>
+  <div class="stat-grid" id="statGrid"></div>
+
+  <div class="card lime" style="margin-top:24px">
+    <div class="card-title">⚙️ Challenge Settings</div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px">
+      <label class="fl" style="margin:0">Challenge start date:</label>
+      <input type="date" id="chStart" onchange="saveChStart()" style="width:auto">
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📤 Submit to Amanda</div>
+    <div class="card-sub">Encodes your full 28 days. Copy and paste wherever Amanda asks.</div>
+    <button onclick="genShare()" class="btn-lime">🔗 Generate Submission Link</button>
+    <div id="shareBox" style="display:none;margin-top:14px">
+      <div class="share-row">
+        <input type="text" id="shareLink" readonly>
+        <button onclick="cpShare()" style="margin:0">Copy</button>
+      </div>
+      <div id="shareCopied" style="display:none;color:var(--p);font-weight:700;font-size:.82em;margin-top:8px">✓ Copied!</div>
+    </div>
+  </div>
+
+  <div class="btn-row" style="margin-top:16px">
+    <button onclick="exportJSON()" class="btn-ghost btn-sm">Export JSON</button>
+    <button onclick="clearAll()" class="btn-danger btn-sm">Clear All Data</button>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<!-- SAVE PILL -->
+<div class="save-pill" id="savePill">Saved ✓</div>
+
+<!-- DAY MODAL -->
+<div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-inner">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ONBOARDING MODAL -->
+<div class="modal-bg" id="onboardModal" style="display:none">
+  <div class="modal-inner" id="onboardInner">
+    <div class="onboard-step active" id="ob1">
+      <div style="font-family:'Playfair Display',serif;font-size:1.6em;font-weight:700;color:var(--p);margin-bottom:8px">Welcome to your Visibility System 🌟</div>
+      <p style="color:var(--muted);margin-bottom:20px;line-height:1.6">Before we start, let's capture where you are right now so we can show your real transformation on Day 28.</p>
+      <div class="num-grid">
+        <div class="nc"><label>Instagram Followers</label><input type="number" id="sIG" placeholder="0"></div>
+        <div class="nc"><label>TikTok Followers</label><input type="number" id="sTT" placeholder="0"></div>
+        <div class="nc"><label>YouTube Subscribers</label><input type="number" id="sYT" placeholder="0"></div>
+        <div class="nc"><label>Skool Members</label><input type="number" id="sSK" placeholder="0"></div>
+        <div class="nc"><label>MRR ($)</label><input type="number" id="sMRR" placeholder="0"></div>
+        <div class="nc"><label>Email List</label><input type="number" id="sEM" placeholder="0"></div>
+      </div>
+      <div class="field" style="margin-top:16px">
+        <label class="fl">How are you feeling going in?</label>
+        <textarea id="sNotes" placeholder="Energy, mindset, what you're most excited about..." style="min-height:70px"></textarea>
+      </div>
+      <button onclick="obNext()" class="btn-p" style="margin-top:8px">Next → Set Your Start Date</button>
+    </div>
+    <div class="onboard-step" id="ob2">
+      <div style="font-family:'Playfair Display',serif;font-size:1.4em;font-weight:700;color:var(--p);margin-bottom:8px">When does the challenge start? 📅</div>
+      <p style="color:var(--muted);margin-bottom:16px;font-size:.9em">This lets the system auto-calculate your challenge day on every tab.</p>
+      <input type="date" id="obStart" style="width:auto">
+      <div style="margin-top:24px">
+        <button onclick="obFinish()" class="btn-lime">✨ Let's Go!</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATA MODEL
+// ══════════════════════════════════════════════
+var DB = JSON.parse(localStorage.getItem('vbd_v4') || 'null');
+if(!DB) DB = { profile:{snap:{},challengeStart:null}, days:{} };
+if(!DB.profile) DB.profile = {snap:{},challengeStart:null};
+if(!DB.days) DB.days = {};
+
+var TODAY = new Date().toISOString().split('T')[0];
+var mDay = TODAY, eDay = TODAY, ciDay = TODAY;
+var timerInterval = null, timerStart = null, timerRunning = false;
+var energyVal = 0;
+var ciSelectedType = '';
+
+function getDay(ds){
+  if(!DB.days[ds]) DB.days[ds] = {
+    morning:{done:false,dump:'',highSelf:'',energy:'',tasks:['','',''],checked:[false,false,false]},
+    checkin:{training:'',learnings:'',visitors:'',visitorsDir:'up',conv:'',convDir:'up',members:'',membersDir:'up',groupEng:'',groupEngDir:'up',profile:'',profileDir:'up',contentNum:'',contentLink:'',contentType:'',dms:'',adSpend:'',newAds:'',insight:'',posted:false},
+    evening:{done:false,winOfDay:'',wins:'',improve:'',reflection:'',contentIdeas:'',energy:0},
+    timeLogs:[],
+    skoolLink:''
+  };
+  var d = DB.days[ds];
+  // migrations
+  if(!d.morning) d.morning={done:false,dump:'',highSelf:'',energy:'',tasks:['','',''],checked:[false,false,false]};
+  if(!d.checkin) d.checkin={training:'',learnings:'',visitors:'',visitorsDir:'up',conv:'',convDir:'up',members:'',membersDir:'up',groupEng:'',groupEngDir:'up',profile:'',profileDir:'up',contentNum:'',contentLink:'',contentType:'',dms:'',adSpend:'',newAds:'',insight:'',posted:false};
+  if(!d.evening) d.evening={done:false,winOfDay:'',wins:'',improve:'',reflection:'',contentIdeas:'',energy:0};
+  if(!d.timeLogs) d.timeLogs=[];
+  if(d.skoolLink===undefined) d.skoolLink='';
+  return d;
+}
+
+function save(){
+  localStorage.setItem('vbd_v4', JSON.stringify(DB));
+  var p = document.getElementById('savePill');
+  p.classList.add('show');
+  setTimeout(function(){ p.classList.remove('show'); }, 2000);
+  updateMomentumBar();
+}
+
+// ══════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════
+function ge(id){ return document.getElementById(id); }
+function gv(id){ var e=ge(id); return e?e.value:''; }
+function sv(id,v){ var e=ge(id); if(e) e.value=(v===undefined||v===null)?'':v; }
+function addDays(ds,n){ var d=new Date(ds+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
+function fmtLong(ds){ return new Date(ds+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}); }
+function fmtShort(ds){ return new Date(ds+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+function dirArrow(v){ return v==='up'?' ↑':v==='down'?' ↓':' →'; }
+
+function getDayNum(ds){
+  var s=DB.profile.challengeStart; if(!s) return null;
+  var diff = Math.round((new Date(ds+'T12:00:00') - new Date(s+'T12:00:00')) / 86400000) + 1;
+  return diff>=1&&diff<=28 ? diff : null;
+}
+function getDayDateStr(n){
+  var s=DB.profile.challengeStart; if(!s) return null;
+  return addDays(s, n-1);
+}
+function phaseLabel(d){
+  if(!d) return null;
+  if(d<=7) return {cls:'phase-1',text:'📚 Education Phase — Days 1–7 · Focus on learning and setting up your systems'};
+  if(d<=21) return {cls:'phase-2',text:'🔥 Accountability Phase — Days 8–21 · Show up, post daily, track everything'};
+  return {cls:'phase-3',text:'🏁 Final Push — Days 22–28 · Everything counts now. Finish strong.'};
+}
+
+// ══════════════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════════════
+function checkOnboard(){
+  if(!DB.profile.snap.done && !DB.profile.challengeStart){
+    ge('onboardModal').style.display='flex';
+  }
+}
+function obNext(){
+  ge('ob1').classList.remove('active');
+  ge('ob2').classList.add('active');
+  // save snap
+  DB.profile.snap = {
+    ig:gv('sIG'),tt:gv('sTT'),yt:gv('sYT'),sk:gv('sSK'),mrr:gv('sMRR'),em:gv('sEM'),
+    notes:gv('sNotes'),done:true
+  };
+  save();
+}
+function obFinish(){
+  var d = gv('obStart') || TODAY;
+  DB.profile.challengeStart = d;
+  DB.profile.snap.done = true;
+  save();
+  ge('onboardModal').style.display='none';
+  updateAll();
+}
+
+// ══════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════
+function go(id, btn){
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  ge(id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(id==='content') renderCB();
+  if(id==='progress'){ renderProgress(); }
+  if(id==='links') renderLT();
+  if(id==='timer') renderTimerTop3();
+  if(id==='morning') loadM();
+  if(id==='evening') loadE();
+  if(id==='checkin') loadCI();
+}
+
+// ══════════════════════════════════════════════
+// MOMENTUM BAR
+// ══════════════════════════════════════════════
+var mbCollapsed = false;
+function toggleMB(){
+  mbCollapsed = !mbCollapsed;
+  ge('mbContent').className = 'mb-content' + (mbCollapsed?' collapsed':'');
+  ge('mbToggleBtn').textContent = mbCollapsed ? '▼ expand' : '▲ collapse';
+}
+function updateMomentumBar(){
+  // Streak
+  var streak=0, d=TODAY;
+  while(true){
+    var day=DB.days[d];
+    if(day&&(day.morning.done||day.evening.done)){ streak++; d=addDays(d,-1); }
+    else break;
+  }
+  if(streak>0){
+    ge('streakBadge').style.display='inline-flex';
+    ge('streakNum').textContent=streak;
+  } else {
+    ge('streakBadge').style.display='none';
+  }
+  // Latest members from most recent check-in
+  var latestMembers = '—';
+  var dates = Object.keys(DB.days).sort().reverse();
+  for(var i=0;i<dates.length;i++){
+    var ci = DB.days[dates[i]].checkin;
+    if(ci&&ci.members){ latestMembers=ci.members; break; }
+  }
+  // Content count
+  var totalContent=0;
+  dates.forEach(function(ds){ totalContent += parseInt(DB.days[ds].checkin.contentNum)||0; });
+  // Days completed
+  var daysDone=0;
+  dates.forEach(function(ds){ var d=DB.days[ds]; if(d.morning.done||d.evening.done)daysDone++; });
+  // Stats
+  ge('mbStats').innerHTML = [
+    {n:daysDone+'/28',l:'Days Done'},
+    {n:latestMembers,l:'Members'},
+    {n:totalContent,l:'Pieces Published'},
+    {n:streak>0?'🔥'+streak:'0',l:'Day Streak'}
+  ].map(function(s){
+    return '<div class="mb-stat"><div class="mb-stat-n">'+s.n+'</div><div class="mb-stat-l">'+s.l+'</div></div>';
+  }).join('');
+  // Bars
+  var pct=Math.min(100,Math.round((daysDone/28)*100));
+  var snapMembers = parseInt(DB.profile.snap.sk)||0;
+  var curMembers = parseInt(latestMembers)||0;
+  var memberGrowth = snapMembers>0 ? Math.min(100,Math.round(((curMembers-snapMembers)/snapMembers)*100)) : 0;
+  ge('mbBars').innerHTML =
+    '<div class="prog-row"><span class="prog-label">Days Completed</span><div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%;background:linear-gradient(90deg,var(--p),var(--pk))"></div></div><span class="prog-val">'+pct+'%</span></div>'+
+    '<div class="prog-row"><span class="prog-label">Content Published</span><div class="prog-bar"><div class="prog-fill" style="width:'+Math.min(100,Math.round((totalContent/56)*100))+'%;background:linear-gradient(90deg,var(--lime2),var(--lime))"></div></div><span class="prog-val">'+totalContent+'</span></div>'+
+    (snapMembers>0?'<div class="prog-row"><span class="prog-label">Member Growth</span><div class="prog-bar"><div class="prog-fill" style="width:'+Math.max(0,memberGrowth)+'%;background:linear-gradient(90deg,var(--pk),var(--p2))"></div></div><span class="prog-val">+'+Math.max(0,curMembers-snapMembers)+'</span></div>':'');
+  // Day chip
+  var dn = getDayNum(TODAY);
+  if(dn){
+    ge('dayChip').style.display='inline-flex';
+    ge('dayChipText').textContent='Challenge Day '+dn+' of 28';
+  }
+}
+
+// ══════════════════════════════════════════════
+// MORNING
+// ══════════════════════════════════════════════
+function loadM(){
+  var d = getDay(mDay);
+  sv('mDump',d.morning.dump);
+  sv('mHighSelf',d.morning.highSelf||'');
+  sv('mEnergy',d.morning.energy);
+  sv('t1',d.morning.tasks[0]); sv('t2',d.morning.tasks[1]); sv('t3',d.morning.tasks[2]);
+  ge('t1c').checked=d.morning.checked[0]||false;
+  ge('t2c').checked=d.morning.checked[1]||false;
+  ge('t3c').checked=d.morning.checked[2]||false;
+  ge('mDate').innerHTML = fmtLong(mDay) + (mDay===TODAY?'<span class="today-pill">Today</span>':'');
+  ge('mStatus').textContent = d.morning.done ? '✓ Completed' : 'Not yet completed';
+  var dn=getDayNum(mDay); var ph=phaseLabel(dn);
+  ge('mPhaseBanner').innerHTML = ph ? '<div class="phase-banner '+ph.cls+'">'+ph.text+'</div>' : '';
+}
+function saveM(){
+  var d=getDay(mDay);
+  d.morning.dump=gv('mDump'); d.morning.highSelf=gv('mHighSelf'); d.morning.energy=gv('mEnergy');
+  d.morning.tasks=[gv('t1'),gv('t2'),gv('t3')];
+  d.morning.checked=[ge('t1c').checked,ge('t2c').checked,ge('t3c').checked];
+  save();
+}
+function completeM(){
+  var d=getDay(mDay); d.morning.done=true; saveM();
+  ge('mStatus').textContent='✓ Completed';
+  showConfetti();
+  alert('✨ Morning practice complete! Go get it.');
+}
+function chDay(tab, dir){
+  if(tab==='m'){ saveM(); mDay=addDays(mDay,dir); loadM(); }
+  else if(tab==='e'){ saveE(); eDay=addDays(eDay,dir); loadE(); }
+  else if(tab==='ci'){ saveCI(); ciDay=addDays(ciDay,dir); loadCI(); ge('ciOutput').style.display='none'; }
+}
+
+// ══════════════════════════════════════════════
+// DAILY CHECK-IN
+// ══════════════════════════════════════════════
+(function(){
+  var c=ge('ciTypePills'); if(!c)return;
+  ['Post','Reel','TikTok','YouTube','Carousel','LinkedIn','Ad'].forEach(function(t){
+    var p=document.createElement('div'); p.className='pill'; p.textContent=t; p.dataset.type=t;
+    p.onclick=function(){
+      ciSelectedType=(ciSelectedType===t)?'':t;
+      document.querySelectorAll('#ciTypePills .pill').forEach(function(x){ x.classList.toggle('sel',x.dataset.type===ciSelectedType); });
+      saveCI();
+    };
+    c.appendChild(p);
+  });
+})();
+
+function loadCI(){
+  var d=getDay(ciDay); var ci=d.checkin;
+  sv('ciTraining',ci.training); sv('ciLearnings',ci.learnings);
+  sv('ciVisitors',ci.visitors); sv('ciVisitorsDir',ci.visitorsDir);
+  sv('ciConv',ci.conv); sv('ciConvDir',ci.convDir);
+  sv('ciMembers',ci.members); sv('ciMembersDir',ci.membersDir);
+  sv('ciGroupEng',ci.groupEng); sv('ciGroupEngDir',ci.groupEngDir);
+  sv('ciProfile',ci.profile); sv('ciProfileDir',ci.profileDir);
+  sv('ciContentNum',ci.contentNum); sv('ciContentLink',ci.contentLink);
+  sv('ciDMs',ci.dms); sv('ciAdSpend',ci.adSpend); sv('ciNewAds',ci.newAds);
+  sv('ciInsight',ci.insight);
+  ge('ciPosted').checked=ci.posted||false;
+  ciSelectedType=ci.contentType||'';
+  document.querySelectorAll('#ciTypePills .pill').forEach(function(p){ p.classList.toggle('sel',p.dataset.type===ciSelectedType); });
+  sv('ciSkoolLink',d.skoolLink||'');
+  ge('ciDate').innerHTML = fmtLong(ciDay)+(ciDay===TODAY?'<span class="today-pill">Today</span>':'');
+  var dn=getDayNum(ciDay);
+  ge('ciStatus').textContent = dn ? 'Challenge Day '+dn : (d.checkin.posted?'✓ Posted':'');
+}
+function saveCI(){
+  var d=getDay(ciDay); var ci=d.checkin;
+  ci.training=gv('ciTraining'); ci.learnings=gv('ciLearnings');
+  ci.visitors=gv('ciVisitors'); ci.visitorsDir=gv('ciVisitorsDir');
+  ci.conv=gv('ciConv'); ci.convDir=gv('ciConvDir');
+  ci.members=gv('ciMembers'); ci.membersDir=gv('ciMembersDir');
+  ci.groupEng=gv('ciGroupEng'); ci.groupEngDir=gv('ciGroupEngDir');
+  ci.profile=gv('ciProfile'); ci.profileDir=gv('ciProfileDir');
+  ci.contentNum=gv('ciContentNum'); ci.contentLink=gv('ciContentLink');
+  ci.dms=gv('ciDMs'); ci.adSpend=gv('ciAdSpend'); ci.newAds=gv('ciNewAds');
+  ci.insight=gv('ciInsight'); ci.contentType=ciSelectedType;
+  ci.posted=ge('ciPosted').checked;
+  save();
+}
+function saveSkoolLink(){
+  var d=getDay(ciDay); d.skoolLink=gv('ciSkoolLink'); save();
+  ge('ciSkoolSaved').style.display='block';
+  setTimeout(function(){ ge('ciSkoolSaved').style.display='none'; },3000);
+}
+
+function generatePost(){
+  saveCI();
+  var d=getDay(ciDay); var ci=d.checkin;
+  var dn=getDayNum(ciDay)||'?';
+  var dateStr=new Date(ciDay+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  var typeStr=ci.contentType?' '+ci.contentType:'';
+  var lines=[
+    '✨ DAY '+dn+' CHECK-IN — Visibility By Design Challenge',
+    '📅 '+dateStr,
+    '👤 Visitors: '+(ci.visitors||'—')+dirArrow(ci.visitorsDir||'same'),
+    '📈 Conversion: '+(ci.conv||'—')+'%'+dirArrow(ci.convDir||'same'),
+    '🌟 Members: '+(ci.members||'—')+dirArrow(ci.membersDir||'same'),
+    '🔗 Content'+typeStr+': '+(ci.contentLink||'—'),
+    '👁 '+(ci.insight||'—')
+  ];
+  var box=ge('ciPostText'); box.innerHTML='';
+  lines.forEach(function(line){
+    var p=document.createElement('p'); p.style.margin='0 0 4px 0'; p.textContent=line; box.appendChild(p);
+  });
+  ge('ciOutput').style.display='block';
+  ge('ciOutput').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function copyPost(){
+  var box=ge('ciPostText');
+  var range=document.createRange(); range.selectNodeContents(box);
+  var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+  var m=ge('ciCopied');
+  try{ document.execCommand('copy'); m.textContent='✓ Copied! Paste into Skool.'; }
+  catch(e){ m.textContent='👆 Text selected — press Cmd+C / Ctrl+C'; }
+  m.style.display='block';
+  setTimeout(function(){ m.style.display='none'; },4000);
+}
+
+// ══════════════════════════════════════════════
+// TIME TRACKER
+// ══════════════════════════════════════════════
+function startTimer(){
+  var task=gv('timerTask');
+  if(!task.trim()){ alert('Enter a task name first!'); return; }
+  timerStart=Date.now(); timerRunning=true;
+  ge('timerStartBtn').style.display='none';
+  ge('timerStopBtn').style.display='inline-block';
+  ge('timerDisplay').classList.add('timer-active');
+  timerInterval=setInterval(function(){
+    var elapsed=Math.floor((Date.now()-timerStart)/1000);
+    var h=Math.floor(elapsed/3600), m=Math.floor((elapsed%3600)/60), s=elapsed%60;
+    ge('timerDisplay').textContent=(h?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  },1000);
+}
+function stopTimer(){
+  if(!timerRunning)return;
+  clearInterval(timerInterval); timerRunning=false;
+  var elapsed=Math.floor((Date.now()-timerStart)/1000);
+  var task=gv('timerTask');
+  var entry={task:task,start:new Date(timerStart).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),end:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),seconds:elapsed};
+  var d=getDay(TODAY); d.timeLogs.push(entry); save();
+  ge('timerDisplay').textContent='00:00:00';
+  ge('timerDisplay').classList.remove('timer-active');
+  ge('timerStartBtn').style.display='inline-block';
+  ge('timerStopBtn').style.display='none';
+  sv('timerTask','');
+  renderTimeLogs();
+}
+function deleteTimeLog(i){
+  var d=getDay(TODAY); d.timeLogs.splice(i,1); save(); renderTimeLogs();
+}
+function fmtSecs(s){ var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60; return (h?h+'h ':'')+m+'m '+(h?'':sec+'s'); }
+function renderTimeLogs(){
+  var d=getDay(TODAY); var logs=d.timeLogs||[];
+  var el=ge('timeLog'); var none=ge('noTimeLogs');
+  if(!logs.length){ el.innerHTML=''; none.style.display='block'; return; }
+  none.style.display='none';
+  el.innerHTML=logs.map(function(e,i){
+    return '<div class="time-entry"><span class="te-task">'+e.task+'</span><span class="te-time">'+e.start+' – '+e.end+'</span><span class="te-dur">'+fmtSecs(e.seconds)+'</span><button class="te-del" onclick="deleteTimeLog('+i+')">✕</button></div>';
+  }).join('');
+}
+function renderTimerTop3(){
+  var d=getDay(TODAY); var tasks=d.morning.tasks||[];
+  var el=ge('timerTop3'); var any=tasks.some(function(t){return t.trim();});
+  if(!any){ el.innerHTML='<span style="color:var(--muted);font-size:.88em">Complete your morning practice to see your top 3 tasks here.</span>'; return; }
+  el.innerHTML=tasks.filter(function(t){return t.trim();}).map(function(t,i){
+    return '<div style="padding:9px 0;border-bottom:1px solid var(--border);font-size:.9em;display:flex;align-items:center;gap:10px"><span style="background:var(--ink);color:var(--lime);width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.7em;font-weight:800;flex-shrink:0">'+(i+1)+'</span>'+t+'</div>';
+  }).join('');
+  renderTimeLogs();
+}
+
+// ══════════════════════════════════════════════
+// EVENING
+// ══════════════════════════════════════════════
+function loadE(){
+  var d=getDay(eDay); var e=d.evening;
+  sv('eWinOfDay',e.winOfDay||''); sv('eWins',e.wins); sv('eImprove',e.improve||'');
+  sv('eReflection',e.reflection); sv('eContentIdeas',e.contentIdeas||'');
+  energyVal=e.energy||0;
+  document.querySelectorAll('.e-btn').forEach(function(b){ b.classList.toggle('sel',parseInt(b.dataset.v)===energyVal); });
+  ge('eDate').innerHTML=fmtLong(eDay)+(eDay===TODAY?'<span class="today-pill">Today</span>':'');
+  ge('eStatus').textContent=d.evening.done?'✓ Completed':'Not yet completed';
+}
+function saveE(){
+  var d=getDay(eDay); var e=d.evening;
+  e.winOfDay=gv('eWinOfDay'); e.wins=gv('eWins'); e.improve=gv('eImprove');
+  e.reflection=gv('eReflection'); e.contentIdeas=gv('eContentIdeas'); e.energy=energyVal;
+  save();
+}
+function setEnergy(v){
+  energyVal=v;
+  document.querySelectorAll('.e-btn').forEach(function(b){ b.classList.toggle('sel',parseInt(b.dataset.v)===v); });
+  saveE();
+}
+function completeE(){
+  saveE();
+  var d=getDay(eDay); d.evening.done=true; save();
+  ge('eStatus').textContent='✓ Completed';
+  showConfetti();
+  renderCB(); // ensure content bank updates
+  alert('✨ Evening debrief complete! Your content ideas have been saved to the Content Bank.');
+}
+
+// ══════════════════════════════════════════════
+// CONTENT BANK
+// ══════════════════════════════════════════════
+function renderCB(){
+  var c=ge('cbList'); if(!c)return;
+  var dates=Object.keys(DB.days).sort().reverse();
+  var cards=dates.filter(function(ds){ var e=DB.days[ds].evening; return e&&e.contentIdeas&&e.contentIdeas.trim(); });
+  if(!cards.length){
+    c.innerHTML='<div style="text-align:center;padding:50px 20px;color:var(--muted)"><p style="font-size:1.1em;margin-bottom:8px">No content ideas yet</p><p style="font-size:.88em">Fill in the "Content Ideas from Today" field in your Evening Debrief — it auto-saves here.</p></div>';
+    return;
+  }
+  c.innerHTML=cards.map(function(ds){
+    return '<div class="cb-card"><div class="cb-date">'+fmtLong(ds)+'</div><div class="cb-text">'+DB.days[ds].evening.contentIdeas+'</div></div>';
+  }).join('');
+}
+function exportCB(){
+  var lines=['CONTENT BANK — '+new Date().toLocaleDateString(),'='.repeat(60)];
+  Object.keys(DB.days).sort().forEach(function(ds){
+    var e=DB.days[ds].evening;
+    if(e&&e.contentIdeas&&e.contentIdeas.trim()){ lines.push(''); lines.push('=== '+fmtLong(ds)+' ==='); lines.push(e.contentIdeas); }
+  });
+  if(lines.length<=2){alert('Nothing to export yet.');return;}
+  var b=new Blob([lines.join('\n')],{type:'text/plain'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='content-bank-'+TODAY+'.txt'; a.click();
+}
+
+// ══════════════════════════════════════════════
+// LINK TRACKER
+// ══════════════════════════════════════════════
+function renderLT(){
+  var lp=ge('ltProgress'), ll=ge('ltList'); if(!lp||!ll)return;
+  var totC=0,totS=0;
+  for(var i=1;i<=28;i++){
+    var ds=getDayDateStr(i);
+    if(ds&&DB.days[ds]){
+      if(DB.days[ds].checkin.contentLink&&DB.days[ds].checkin.contentLink.trim())totC++;
+      if(DB.days[ds].skoolLink&&DB.days[ds].skoolLink.trim())totS++;
+    }
+  }
+  lp.innerHTML=
+    '<div class="prog-row"><span class="prog-label">Content links</span><div class="prog-bar"><div class="prog-fill" style="width:'+Math.round((totC/28)*100)+'%;background:linear-gradient(90deg,var(--lime2),var(--lime))"></div></div><span class="prog-val">'+totC+'/28</span></div>'+
+    '<div class="prog-row"><span class="prog-label">Skool check-ins</span><div class="prog-bar"><div class="prog-fill" style="width:'+Math.round((totS/28)*100)+'%;background:linear-gradient(90deg,var(--p),var(--p2))"></div></div><span class="prog-val">'+totS+'/28</span></div>';
+  var rows='';
+  for(var day=1;day<=28;day++){
+    var dstr=getDayDateStr(day);
+    var cLink=dstr&&DB.days[dstr]?DB.days[dstr].checkin.contentLink||'':'';
+    var sLink=dstr&&DB.days[dstr]?DB.days[dstr].skoolLink||'':'';
+    var hasC=cLink.trim().length>0,hasS=sLink.trim().length>0;
+    var bc=(hasC&&hasS)?'rgba(200,255,0,.4)':(hasC||hasS)?'rgba(127,119,221,.2)':'var(--border)';
+    var pc=day<=7?'var(--p)':day<=21?'var(--pk)':'var(--lime2)';
+    var dl=dstr?new Date(dstr+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    rows+='<div class="lt-row" style="border-color:'+bc+'">'+
+      '<div class="lt-head"><span class="lt-day" style="color:'+pc+'">Day '+day+'</span><span class="lt-date">'+dl+'</span><span style="margin-left:auto;font-size:.8em">'+(hasC&&hasS?'✅':(hasC||hasS)?'🔄':'')+'</span></div>'+
+      '<div class="lt-body">'+
+      '<div class="lt-field"><span class="lt-lbl" style="color:var(--lime2)">Content</span><input type="url" placeholder="Auto-fills from Check-In" value="'+(cLink.replace(/"/g,'&quot;'))+'" onchange="saveLTContent(\''+dstr+'\',this.value)" style="flex:1;font-size:.82em;padding:6px 10px;background:var(--bg)">'+(hasC?'<a href="'+cLink+'" target="_blank" class="lt-link">View</a>':'')+'</div>'+
+      '<div class="lt-field"><span class="lt-lbl" style="color:var(--p)">Skool post</span><input type="url" placeholder="Paste after posting" value="'+(sLink.replace(/"/g,'&quot;'))+'" onchange="saveLTSkool('+(day)+',this.value,\''+dstr+'\')" style="flex:1;font-size:.82em;padding:6px 10px;background:var(--bg)">'+(hasS?'<a href="'+sLink+'" target="_blank" class="lt-link">View</a>':'')+'</div>'+
+      '</div></div>';
+  }
+  ll.innerHTML=rows;
+}
+function saveLTContent(ds,v){ if(!ds)return; var d=getDay(ds); d.checkin.contentLink=v; save(); }
+function saveLTSkool(day,v,ds){ if(ds){ var d=getDay(ds); d.skoolLink=v; } save(); }
+
+// ══════════════════════════════════════════════
+// PROGRESS
+// ══════════════════════════════════════════════
+function renderProgress(){
+  var dn=getDayNum(TODAY);
+  // Phase banner
+  var ph=phaseLabel(dn);
+  ge('progressPhase').innerHTML = ph ? '<div class="phase-banner '+ph.cls+'" style="margin-bottom:16px">'+ph.text+'</div>' : '';
+  // Before/after
+  renderBA();
+  // Hall of wins
+  renderHallOfWins();
+  // Grid
+  renderGrid();
+  // Stats
+  renderStats();
+  // Challenge start
+  if(DB.profile.challengeStart) ge('chStart').value=DB.profile.challengeStart;
+}
+function renderBA(){
+  var snap=DB.profile.snap||{};
+  var dates=Object.keys(DB.days).sort().reverse();
+  var latestCI=null;
+  for(var i=0;i<dates.length;i++){ var ci=DB.days[dates[i]].checkin; if(ci&&ci.members){ latestCI=ci; break; } }
+  var fields=[
+    {key:'Members',snap:snap.sk,cur:latestCI?latestCI.members:null},
+    {key:'Instagram',snap:snap.ig,cur:null},
+    {key:'TikTok',snap:snap.tt,cur:null},
+    {key:'YouTube',snap:snap.yt,cur:null},
+    {key:'MRR ($)',snap:snap.mrr,cur:null}
+  ];
+  var bef='',aft='';
+  fields.forEach(function(f){
+    var s=f.snap||'—'; var c=f.cur||'—';
+    var diff=null;
+    if(f.cur&&f.snap){ diff=parseInt(f.cur)-parseInt(f.snap); }
+    var diffHtml='';
+    if(diff!==null){ var cls=diff>0?'pos':diff<0?'neg':'zero'; diffHtml='<span class="ba-diff '+cls+'">'+(diff>0?'+':'')+diff+'</span>'; }
+    bef+='<div class="ba-row"><span class="ba-key">'+f.key+'</span><span class="ba-val">'+s+'</span></div>';
+    aft+='<div class="ba-row"><span class="ba-key">'+f.key+'</span><span class="ba-val">'+c+' '+diffHtml+'</span></div>';
+  });
+  ge('baGrid').innerHTML=
+    '<div class="ba-card before"><div class="ba-label">📸 Day 1 Baseline</div>'+bef+'</div>'+
+    '<div class="ba-card after"><div class="ba-label">✨ Current</div>'+aft+'</div>';
+}
+function renderHallOfWins(){
+  var el=ge('hallOfWins');
+  var dates=Object.keys(DB.days).sort().reverse();
+  var wins=dates.filter(function(ds){ return DB.days[ds].evening&&DB.days[ds].evening.winOfDay&&DB.days[ds].evening.winOfDay.trim(); });
+  if(!wins.length){ el.innerHTML='<div style="color:var(--muted);font-size:.88em;padding:12px 0">Complete your evening debrief each day and your wins will appear here. 🏆</div>'; return; }
+  el.innerHTML=wins.map(function(ds){
+    return '<div class="win-card"><div class="win-date">'+fmtShort(ds)+'</div><div class="win-text">'+DB.days[ds].evening.winOfDay+'</div><div class="win-star">⭐</div></div>';
+  }).join('');
+}
+function renderGrid(){
+  var grid=ge('tGrid'); if(!grid)return;
+  var dates=Object.keys(DB.days).sort().reverse().slice(0,56);
+  grid.innerHTML=dates.map(function(ds){
+    var d=DB.days[ds]; var cls='t-none';
+    if(d.morning.done&&d.evening.done)cls='t-full'; else if(d.morning.done)cls='t-am'; else if(d.evening.done)cls='t-pm';
+    var dn=getDayNum(ds); var label=dn?'D'+dn:new Date(ds+'T12:00:00').getDate();
+    return '<div class="t-cell '+cls+'" onclick="openDayModal(\''+ds+'\')" title="'+fmtShort(ds)+'"><div style="font-weight:800;font-size:.9em">'+label+'</div><div style="font-size:.55em;margin-top:2px">'+(d.morning.done?'AM':'')+' '+(d.evening.done?'PM':'')+'</div></div>';
+  }).join('');
+}
+function renderStats(){
+  var dates=Object.keys(DB.days);
+  var am=0,pm=0,full=0,totC=0,totDMs=0,totAds=0,totSpend=0,avgEnergy=0,eCount=0;
+  dates.forEach(function(ds){
+    var d=DB.days[ds];
+    if(d.morning.done)am++; if(d.evening.done)pm++; if(d.morning.done&&d.evening.done)full++;
+    totC+=parseInt(d.checkin.contentNum)||0;
+    totDMs+=parseInt(d.checkin.dms)||0;
+    totAds+=parseInt(d.checkin.newAds)||0;
+    totSpend+=parseFloat(d.checkin.adSpend)||0;
+    if(d.evening.energy){ avgEnergy+=d.evening.energy; eCount++; }
+  });
+  var avg=eCount?Math.round((avgEnergy/eCount)*10)/10:'—';
+  ge('statGrid').innerHTML=[
+    {n:am+'/28',l:'Mornings Done'},{n:pm+'/28',l:'Evenings Done'},{n:full+'/28',l:'Full Days'},
+    {n:totC,l:'Pieces Published'},{n:totDMs,l:'DMs Sent'},{n:'$'+totSpend.toFixed(0),l:'Ad Spend'},
+    {n:totAds,l:'New Ads'},{n:avg,l:'Avg Energy'}
+  ].map(function(s){ return '<div class="stat-card"><div class="stat-n">'+s.n+'</div><div class="stat-l">'+s.l+'</div></div>'; }).join('');
+}
+function saveChStart(){ DB.profile.challengeStart=gv('chStart'); save(); updateAll(); }
+
+// ══════════════════════════════════════════════
+// DAY MODAL
+// ══════════════════════════════════════════════
+function openDayModal(ds){
+  var d=getDay(ds); var m=d.morning; var e=d.evening; var ci=d.checkin;
+  function row(label,val){ return val&&val.trim()?'<div style="margin-bottom:10px"><div style="font-size:.7em;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:3px">'+label+'</div><div style="font-size:.88em;line-height:1.6;white-space:pre-wrap;color:var(--ink)">'+val+'</div></div>':''; }
+  ge('modalBody').innerHTML=
+    '<div style="font-family:Playfair Display,serif;font-size:1.3em;font-weight:700;color:var(--p);margin-bottom:14px">'+fmtLong(ds)+'</div>'+
+    '<div style="display:flex;gap:6px;margin-bottom:16px">'+
+    (m.done?'<span style="background:rgba(200,255,0,.2);color:#5a7000;padding:4px 12px;border-radius:10px;font-size:.75em;font-weight:800">🌅 Morning ✓</span>':'<span style="background:var(--bg);color:var(--muted);padding:4px 12px;border-radius:10px;font-size:.75em;font-weight:700">🌅 Morning —</span>')+
+    (e.done?'<span style="background:rgba(212,83,126,.1);color:var(--pk);padding:4px 12px;border-radius:10px;font-size:.75em;font-weight:800">🌙 Evening ✓</span>':'<span style="background:var(--bg);color:var(--muted);padding:4px 12px;border-radius:10px;font-size:.75em;font-weight:700">🌙 Evening —</span>')+
+    '</div>'+
+    (e.winOfDay?'<div style="background:linear-gradient(135deg,rgba(200,255,0,.1),rgba(127,119,221,.06));border:1px solid rgba(200,255,0,.3);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:.9em;font-weight:600">⭐ '+e.winOfDay+'</div>':'')+
+    row('Brain Dump',m.dump)+row('Clear Energy',m.energy)+
+    (m.tasks.some(function(t){return t;})?'<div style="margin-bottom:10px"><div style="font-size:.7em;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:3px">Top 3 Tasks</div>'+m.tasks.map(function(t,i){return t?'<div style="font-size:.88em;padding:3px 0">'+(m.checked[i]?'✅':'○')+' '+t+'</div>':''}).join('')+'</div>':'')+
+    (ci.training?row('Training Watched',ci.training):'')+
+    (ci.learnings?row('Learnings',ci.learnings):'')+
+    '<div style="background:var(--bg);border-radius:8px;padding:10px 12px;font-size:.82em;color:var(--muted);margin-bottom:10px">👤 Visitors: '+(ci.visitors||'—')+' · Members: '+(ci.members||'—')+' · Content: '+(ci.contentNum||'0')+' pieces · DMs: '+(ci.dms||'0')+'</div>'+
+    row('Wins',e.wins)+row('What to Improve',e.improve)+row('Visibility Q&A',e.reflection)+
+    row('Content Ideas',e.contentIdeas)+
+    (e.energy?'<div style="font-size:.82em;color:var(--muted);margin-top:8px">Energy: '+e.energy+'/10</div>':'');
+  ge('modal').style.display='flex';
+}
+function closeModal(){ ge('modal').style.display='none'; }
+
+// ══════════════════════════════════════════════
+// SHARE / EXPORT
+// ══════════════════════════════════════════════
+function genShare(){
+  try{
+    var enc=btoa(unescape(encodeURIComponent(JSON.stringify(DB))));
+    var url=window.location.href.split('?')[0].split('#')[0]+'#review='+enc;
+    ge('shareLink').value=url; ge('shareBox').style.display='block';
+    ge('shareBox').scrollIntoView({behavior:'smooth',block:'center'});
+  }catch(e){ alert('Could not generate link. Try Export JSON instead.'); }
+}
+function cpShare(){
+  navigator.clipboard.writeText(ge('shareLink').value).then(function(){
+    ge('shareCopied').style.display='block'; setTimeout(function(){ge('shareCopied').style.display='none';},4000);
+  }).catch(function(){ ge('shareLink').select(); document.execCommand('copy'); ge('shareCopied').style.display='block'; setTimeout(function(){ge('shareCopied').style.display='none';},4000); });
+}
+function exportJSON(){
+  var b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='vbd-tracker-'+TODAY+'.json'; a.click();
+}
+function clearAll(){
+  if(confirm('Clear ALL data? This cannot be undone.')){ localStorage.removeItem('vbd_v4'); location.reload(); }
+}
+
+// ══════════════════════════════════════════════
+// CONFETTI
+// ══════════════════════════════════════════════
+function showConfetti(){
+  var colors=['#7F77DD','#D4537E','#C8FF00','#A89FEC','#F0C8D8'];
+  for(var i=0;i<60;i++){
+    var el=document.createElement('div'); el.className='confetti-piece';
+    el.style.left=Math.random()*100+'vw';
+    el.style.background=colors[Math.floor(Math.random()*colors.length)];
+    el.style.animationDuration=(Math.random()*2+1.5)+'s';
+    el.style.animationDelay=(Math.random()*.8)+'s';
+    el.style.width=el.style.height=(Math.random()*8+4)+'px';
+    el.style.borderRadius=Math.random()>.5?'50%':'2px';
+    document.body.appendChild(el);
+    setTimeout(function(e){ e.remove(); },(3000),el);
+  }
+}
+
+// ══════════════════════════════════════════════
+// TODAY LABEL
+// ══════════════════════════════════════════════
+ge('todayLabel').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+function updateAll(){
+  updateMomentumBar();
+  loadM(); loadCI(); loadE();
+}
+updateAll();
+checkOnboard();
+</script>
+</body>
+</html>
