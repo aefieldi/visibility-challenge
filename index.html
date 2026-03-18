@@ -370,6 +370,7 @@ button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(30,27,46,0.2)
       <div class="nc"><label>Members</label><input type="number" id="ciMembers" min="0" placeholder="0" oninput="saveCI()"><select id="ciMembersDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
       <div class="nc"><label>Group Engagement</label><input type="number" id="ciGroupEng" min="0" placeholder="0" oninput="saveCI()"><select id="ciGroupEngDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
       <div class="nc"><label>Profile Activity</label><input type="number" id="ciProfile" min="0" placeholder="0" oninput="saveCI()"><select id="ciProfileDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
+      <div class="nc"><label>Discovery Ranking</label><input type="number" id="ciDiscovery" min="0" placeholder="0" oninput="saveCI()"><select id="ciDiscoveryDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
     </div>
   </div>
 
@@ -849,6 +850,7 @@ function loadCI(){
   sv('ciMembers',ci.members); sv('ciMembersDir',ci.membersDir);
   sv('ciGroupEng',ci.groupEng); sv('ciGroupEngDir',ci.groupEngDir);
   sv('ciProfile',ci.profile); sv('ciProfileDir',ci.profileDir);
+  sv('ciDiscovery',ci.discovery||''); sv('ciDiscoveryDir',ci.discoveryDir||'up');
   sv('ciContentNum',ci.contentNum); sv('ciContentLink',ci.contentLink);
   sv('ciDMs',ci.dms); sv('ciAdSpend',ci.adSpend); sv('ciNewAds',ci.newAds);
   sv('ciInsight',ci.insight);
@@ -868,6 +870,7 @@ function saveCI(){
   ci.members=gv('ciMembers'); ci.membersDir=gv('ciMembersDir');
   ci.groupEng=gv('ciGroupEng'); ci.groupEngDir=gv('ciGroupEngDir');
   ci.profile=gv('ciProfile'); ci.profileDir=gv('ciProfileDir');
+  ci.discovery=gv('ciDiscovery'); ci.discoveryDir=gv('ciDiscoveryDir');
   ci.contentNum=gv('ciContentNum'); ci.contentLink=gv('ciContentLink');
   ci.dms=gv('ciDMs'); ci.adSpend=gv('ciAdSpend'); ci.newAds=gv('ciNewAds');
   ci.insight=gv('ciInsight'); ci.contentType=ciSelectedType;
@@ -892,6 +895,9 @@ function generatePost(){
     '👤 Visitors: '+(ci.visitors||'—')+dirArrow(ci.visitorsDir||'same'),
     '📈 Conversion: '+(ci.conv||'—')+'%'+dirArrow(ci.convDir||'same'),
     '🌟 Members: '+(ci.members||'—')+dirArrow(ci.membersDir||'same'),
+    '🤝 Group Engagement: '+(ci.groupEng||'—')+dirArrow(ci.groupEngDir||'same'),
+    '⚡ Profile Activity: '+(ci.profile||'—')+dirArrow(ci.profileDir||'same'),
+    '🔍 Discovery Ranking: '+(ci.discovery||'—')+dirArrow(ci.discoveryDir||'same'),
     '🔗 Content'+typeStr+': '+(ci.contentLink||'—'),
     '👁 '+(ci.insight||'—')
   ];
