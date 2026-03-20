@@ -180,6 +180,7 @@ button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(30,27,46,0.2)
 .ba-key{color:var(--muted)}
 .ba-val{font-weight:700;color:var(--ink)}
 .ba-diff{font-size:.75em;font-weight:700;padding:2px 8px;border-radius:8px}
+.ba-input:focus{border-color:var(--p)!important;outline:none;box-shadow:0 0 0 3px rgba(127,119,221,0.12)}
 .ba-diff.pos{background:rgba(200,255,0,.2);color:#5a7000}
 .ba-diff.neg{background:rgba(212,83,126,.1);color:var(--pk)}
 .ba-diff.zero{background:rgba(127,119,221,.1);color:var(--p)}
@@ -370,7 +371,6 @@ button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(30,27,46,0.2)
       <div class="nc"><label>Members</label><input type="number" id="ciMembers" min="0" placeholder="0" oninput="saveCI()"><select id="ciMembersDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
       <div class="nc"><label>Group Engagement</label><input type="number" id="ciGroupEng" min="0" placeholder="0" oninput="saveCI()"><select id="ciGroupEngDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
       <div class="nc"><label>Profile Activity</label><input type="number" id="ciProfile" min="0" placeholder="0" oninput="saveCI()"><select id="ciProfileDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
-      <div class="nc"><label>Discovery Ranking</label><input type="number" id="ciDiscovery" min="0" placeholder="0" oninput="saveCI()"><select id="ciDiscoveryDir" onchange="saveCI()"><option value="up">↑ Up</option><option value="down">↓ Down</option><option value="same">→ Same</option></select></div>
     </div>
   </div>
 
@@ -776,7 +776,8 @@ function updateMomentumBar(){
   // Bars
   var pct=Math.min(100,Math.round((daysDone/28)*100));
   var snapMembers = parseInt(DB.profile.snap.sk)||0;
-  var curMembers = parseInt(latestMembers)||0;
+  var curSnap = DB.profile.currentSnap||{};
+  var curMembers = parseInt(curSnap.sk)||parseInt(latestMembers)||0;
   var memberGrowth = snapMembers>0 ? Math.min(100,Math.round(((curMembers-snapMembers)/snapMembers)*100)) : 0;
   ge('mbBars').innerHTML =
     '<div class="prog-row"><span class="prog-label">Days Completed</span><div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%;background:linear-gradient(90deg,var(--p),var(--pk))"></div></div><span class="prog-val">'+pct+'%</span></div>'+
@@ -850,7 +851,6 @@ function loadCI(){
   sv('ciMembers',ci.members); sv('ciMembersDir',ci.membersDir);
   sv('ciGroupEng',ci.groupEng); sv('ciGroupEngDir',ci.groupEngDir);
   sv('ciProfile',ci.profile); sv('ciProfileDir',ci.profileDir);
-  sv('ciDiscovery',ci.discovery||''); sv('ciDiscoveryDir',ci.discoveryDir||'up');
   sv('ciContentNum',ci.contentNum); sv('ciContentLink',ci.contentLink);
   sv('ciDMs',ci.dms); sv('ciAdSpend',ci.adSpend); sv('ciNewAds',ci.newAds);
   sv('ciInsight',ci.insight);
@@ -870,7 +870,6 @@ function saveCI(){
   ci.members=gv('ciMembers'); ci.membersDir=gv('ciMembersDir');
   ci.groupEng=gv('ciGroupEng'); ci.groupEngDir=gv('ciGroupEngDir');
   ci.profile=gv('ciProfile'); ci.profileDir=gv('ciProfileDir');
-  ci.discovery=gv('ciDiscovery'); ci.discoveryDir=gv('ciDiscoveryDir');
   ci.contentNum=gv('ciContentNum'); ci.contentLink=gv('ciContentLink');
   ci.dms=gv('ciDMs'); ci.adSpend=gv('ciAdSpend'); ci.newAds=gv('ciNewAds');
   ci.insight=gv('ciInsight'); ci.contentType=ciSelectedType;
@@ -895,9 +894,6 @@ function generatePost(){
     '👤 Visitors: '+(ci.visitors||'—')+dirArrow(ci.visitorsDir||'same'),
     '📈 Conversion: '+(ci.conv||'—')+'%'+dirArrow(ci.convDir||'same'),
     '🌟 Members: '+(ci.members||'—')+dirArrow(ci.membersDir||'same'),
-    '🤝 Group Engagement: '+(ci.groupEng||'—')+dirArrow(ci.groupEngDir||'same'),
-    '⚡ Profile Activity: '+(ci.profile||'—')+dirArrow(ci.profileDir||'same'),
-    '🔍 Discovery Ranking: '+(ci.discovery||'—')+dirArrow(ci.discoveryDir||'same'),
     '🔗 Content'+typeStr+': '+(ci.contentLink||'—'),
     '👁 '+(ci.insight||'—')
   ];
@@ -1087,29 +1083,64 @@ function renderProgress(){
 }
 function renderBA(){
   var snap=DB.profile.snap||{};
-  var dates=Object.keys(DB.days).sort().reverse();
-  var latestCI=null;
-  for(var i=0;i<dates.length;i++){ var ci=DB.days[dates[i]].checkin; if(ci&&ci.members){ latestCI=ci; break; } }
+  if(!DB.profile.currentSnap) DB.profile.currentSnap={};
+  var cur=DB.profile.currentSnap;
+
+  // Fall back: auto-fill members from latest check-in if currentSnap.sk not set
+  if(!cur.sk){
+    var dates=Object.keys(DB.days).sort().reverse();
+    for(var i=0;i<dates.length;i++){ var ci=DB.days[dates[i]].checkin; if(ci&&ci.members){ cur.sk=ci.members; break; } }
+  }
+
   var fields=[
-    {key:'Members',snap:snap.sk,cur:latestCI?latestCI.members:null},
-    {key:'Instagram',snap:snap.ig,cur:null},
-    {key:'TikTok',snap:snap.tt,cur:null},
-    {key:'YouTube',snap:snap.yt,cur:null},
-    {key:'MRR ($)',snap:snap.mrr,cur:null}
+    {key:'Members',snapKey:'sk',label:'Skool Members'},
+    {key:'Instagram',snapKey:'ig',label:'Instagram Followers'},
+    {key:'TikTok',snapKey:'tt',label:'TikTok Followers'},
+    {key:'YouTube',snapKey:'yt',label:'YouTube Subscribers'},
+    {key:'MRR ($)',snapKey:'mrr',label:'MRR ($)'}
   ];
+
   var bef='',aft='';
   fields.forEach(function(f){
-    var s=f.snap||'—'; var c=f.cur||'—';
+    var s=snap[f.snapKey]||'—';
+    var c=cur[f.snapKey]||'';
     var diff=null;
-    if(f.cur&&f.snap){ diff=parseInt(f.cur)-parseInt(f.snap); }
+    if(c&&snap[f.snapKey]){ diff=parseInt(c)-parseInt(snap[f.snapKey]); }
     var diffHtml='';
-    if(diff!==null){ var cls=diff>0?'pos':diff<0?'neg':'zero'; diffHtml='<span class="ba-diff '+cls+'">'+(diff>0?'+':'')+diff+'</span>'; }
+    if(diff!==null&&!isNaN(diff)){ var cls=diff>0?'pos':diff<0?'neg':'zero'; diffHtml=' <span class="ba-diff '+cls+'">'+(diff>0?'+':'')+diff+'</span>'; }
     bef+='<div class="ba-row"><span class="ba-key">'+f.key+'</span><span class="ba-val">'+s+'</span></div>';
-    aft+='<div class="ba-row"><span class="ba-key">'+f.key+'</span><span class="ba-val">'+c+' '+diffHtml+'</span></div>';
+    aft+='<div class="ba-row" style="gap:8px"><span class="ba-key" style="min-width:80px">'+f.key+'</span>'+
+         '<input type="number" class="ba-input" data-key="'+f.snapKey+'" placeholder="Enter current" value="'+c+'" oninput="saveCurrentSnap(\''+f.snapKey+'\',this.value)" style="width:90px;text-align:right;font-weight:700;font-size:.88em;padding:3px 8px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--ink);font-family:inherit">'+diffHtml+'</div>';
   });
+
   ge('baGrid').innerHTML=
     '<div class="ba-card before"><div class="ba-label">📸 Day 1 Baseline</div>'+bef+'</div>'+
-    '<div class="ba-card after"><div class="ba-label">✨ Current</div>'+aft+'</div>';
+    '<div class="ba-card after"><div class="ba-label">✨ Current <span style="font-size:.75em;font-weight:500;color:var(--muted);text-transform:none;letter-spacing:0">(tap to update)</span></div>'+aft+'</div>';
+}
+function saveCurrentSnap(key,val){
+  if(!DB.profile.currentSnap) DB.profile.currentSnap={};
+  DB.profile.currentSnap[key]=val;
+  save();
+  // re-render to update diff badges without losing focus
+  var fields=[{snapKey:'sk'},{snapKey:'ig'},{snapKey:'tt'},{snapKey:'yt'},{snapKey:'mrr'}];
+  var snap=DB.profile.snap||{};
+  var cur=DB.profile.currentSnap;
+  fields.forEach(function(f){
+    var c=cur[f.snapKey]||''; var s=snap[f.snapKey];
+    var diffEl=document.querySelector('.ba-input[data-key="'+f.snapKey+'"]');
+    if(!diffEl)return;
+    var row=diffEl.parentElement;
+    var existing=row.querySelector('.ba-diff'); if(existing) existing.remove();
+    if(c&&s){
+      var diff=parseInt(c)-parseInt(s);
+      if(!isNaN(diff)){
+        var sp=document.createElement('span');
+        sp.className='ba-diff '+(diff>0?'pos':diff<0?'neg':'zero');
+        sp.textContent=(diff>0?'+':'')+diff;
+        row.appendChild(sp);
+      }
+    }
+  });
 }
 function renderHallOfWins(){
   var el=ge('hallOfWins');
