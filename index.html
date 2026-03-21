@@ -489,8 +489,8 @@ button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(127,119,221,0
 }
 .stat-n{
   font-family:'Montserrat',sans-serif;font-size:2em;font-weight:900;
-  background:linear-gradient(135deg,#4DD9C0,#38BDF8,#818CF8);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1
+  background:linear-gradient(135deg,#4DD9C0,#38BDF8,#a78bfa);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1;display:block
 }
 .stat-l{
   font-family:'Montserrat',sans-serif;font-size:.66em;color:rgba(200,194,240,0.65);
@@ -1228,6 +1228,7 @@ function toggleMB(){
   ge('mbToggleBtn').textContent = mbCollapsed ? '▼ Expand' : '▲ Collapse';
 }
 function updateMomentumBar(){
+  // ── Streak: consecutive days with morning OR evening done ──
   var streak=0, d=TODAY;
   while(true){
     var day=DB.days[d];
@@ -1240,52 +1241,76 @@ function updateMomentumBar(){
   } else {
     ge('streakBadge').style.display='none';
   }
+
   var dates = Object.keys(DB.days).sort().reverse();
 
-  // Latest members from most recent check-in
-  var latestMembers = '—';
-  for(var i=0;i<dates.length;i++){
-    var ci = DB.days[dates[i]].checkin;
-    if(ci&&ci.members){ latestMembers=ci.members; break; }
-  }
-
-  // Latest MRR from most recent check-in
-  var latestMRR = '—';
-  for(var i=0;i<dates.length;i++){
-    var ci = DB.days[dates[i]].checkin;
-    if(ci&&ci.mrr){ latestMRR='$'+parseFloat(ci.mrr).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}); break; }
-  }
-
-  var totalContent=0;
-  dates.forEach(function(ds){ totalContent += parseInt(DB.days[ds].checkin.contentNum)||0; });
+  // Days completed (total across challenge)
   var daysDone=0;
   dates.forEach(function(ds){ var d=DB.days[ds]; if(d.morning.done||d.evening.done)daysDone++; });
 
+  // Visibility actions = total content pieces published
+  var totalActions=0;
+  dates.forEach(function(ds){ totalActions += parseInt(DB.days[ds].checkin.contentNum)||0; });
+
+  // Latest members
+  var curMembers=0, latestMembersStr='—';
+  for(var i=0;i<dates.length;i++){
+    var ci=DB.days[dates[i]].checkin;
+    if(ci&&ci.members&&ci.members!==''){ curMembers=parseInt(ci.members)||0; latestMembersStr=ci.members; break; }
+  }
+
+  // Latest MRR
+  var curMRR=0, latestMRRStr='—';
+  for(var i=0;i<dates.length;i++){
+    var ci=DB.days[dates[i]].checkin;
+    if(ci&&ci.mrr&&ci.mrr!==''){ curMRR=parseFloat(ci.mrr)||0; latestMRRStr='$'+Math.round(curMRR).toLocaleString(); break; }
+  }
+
+  // ── STAT TILES: Days Complete, Visibility Actions, Total Members, MRR, Day Streak ──
   ge('mbStats').innerHTML = [
-    {n:daysDone+'/28',l:'Days Done'},
-    {n:latestMembers,l:'Members'},
-    {n:latestMRR,l:'MRR'},
-    {n:totalContent,l:'Content Published'},
-    {n:streak>0?'🔥'+streak:'0',l:'Day Streak'}
+    {n:daysDone+'/28', l:'Days Complete'},
+    {n:totalActions,   l:'Visibility Actions'},
+    {n:latestMembersStr, l:'Total Members'},
+    {n:latestMRRStr,   l:'Total MRR'},
+    {n:streak>0?'🔥'+streak:'0', l:'Day Streak'}
   ].map(function(s){
     return '<div class="mb-stat"><div class="mb-stat-n">'+s.n+'</div><div class="mb-stat-l">'+s.l+'</div></div>';
   }).join('');
 
-  var pct=Math.min(100,Math.round((daysDone/28)*100));
+  // ── PROGRESS BARS: Days Completed / Member Growth / MRR Growth / Follower Growth ──
   var snapMembers = parseInt(DB.profile.snap.sk)||0;
-  var snapMRR = parseFloat(DB.profile.snap.mrr)||0;
-  var curMembers = parseInt(latestMembers)||0;
-  var curMRR = parseFloat((function(){ for(var i=0;i<dates.length;i++){ var ci=DB.days[dates[i]].checkin; if(ci&&ci.mrr) return ci.mrr; } return 0; })())||0;
-  var memberGrowth = snapMembers>0 ? Math.min(100,Math.round(((curMembers-snapMembers)/snapMembers)*100)) : 0;
-  var mrrGrowth = snapMRR>0 ? Math.min(100,Math.round(((curMRR-snapMRR)/snapMRR)*100)) : 0;
+  var snapMRR     = parseFloat(DB.profile.snap.mrr)||0;
+  var snapIG      = parseInt(DB.profile.snap.ig)||0;
+  var snapYT      = parseInt(DB.profile.snap.yt)||0;
+  var snapTT      = parseInt(DB.profile.snap.tt)||0;
+  var snapFollowers = snapIG + snapYT + snapTT;
+
+  // Latest social followers
+  var curIG=0,curYT=0,curTT=0;
+  for(var i=0;i<dates.length;i++){ var ci=DB.days[dates[i]].checkin; if(ci&&ci.ig&&ci.ig!==''){ curIG=parseInt(ci.ig)||0; break; } }
+  for(var i=0;i<dates.length;i++){ var ci=DB.days[dates[i]].checkin; if(ci&&ci.yt&&ci.yt!==''){ curYT=parseInt(ci.yt)||0; break; } }
+  for(var i=0;i<dates.length;i++){ var ci=DB.days[dates[i]].checkin; if(ci&&ci.tt&&ci.tt!==''){ curTT=parseInt(ci.tt)||0; break; } }
+  var curFollowers = curIG + curYT + curTT;
+
+  var pctDays = Math.min(100, Math.round((daysDone/28)*100));
+
+  // Growth deltas
+  var memberDelta    = curMembers - snapMembers;
+  var mrrDelta       = curMRR - snapMRR;
+  var followerDelta  = curFollowers - snapFollowers;
+
+  // Bar fill %: cap at 100, show at least 2px if any data
+  function growthPct(delta, base){ if(!base||delta<=0) return delta>0?5:0; return Math.min(100,Math.round((delta/base)*100)); }
+
+  var memberBarPct   = snapMembers>0 ? growthPct(memberDelta,snapMembers) : (memberDelta>0?Math.min(100,Math.round(memberDelta/5)):0);
+  var mrrBarPct      = snapMRR>0 ? growthPct(mrrDelta,snapMRR) : (mrrDelta>0?30:0);
+  var followerBarPct = snapFollowers>0 ? growthPct(followerDelta,snapFollowers) : (followerDelta>0?Math.min(100,Math.round(followerDelta/100)):0);
 
   ge('mbBars').innerHTML =
-    '<div class="prog-row"><span class="prog-label">Days Completed</span><div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%;background:linear-gradient(90deg,#818CF8,#38BDF8,#4DD9C0);box-shadow:0 0 8px rgba(56,189,248,0.4)"></div></div><span class="prog-val">'+pct+'%</span></div>'+
-    '<div class="prog-row"><span class="prog-label">Content Published</span><div class="prog-bar"><div class="prog-fill" style="width:'+Math.min(100,Math.round((totalContent/56)*100))+'%;background:linear-gradient(90deg,#4DD9C0,#38BDF8,#818CF8);box-shadow:0 0 8px rgba(56,189,248,0.4)"></div></div><span class="prog-val">'+totalContent+'</span></div>'+
-    '<div class="prog-row"><span class="prog-label">Members</span><div class="prog-bar"><div class="prog-fill" style="width:'+(snapMembers>0?Math.min(100,Math.round((curMembers/snapMembers)*50)):curMembers>0?30:0)+'%;background:linear-gradient(90deg,#38BDF8,#818CF8,#7F77DD);box-shadow:0 0 8px rgba(127,119,221,0.35)"></div></div><span class="prog-val">'+(curMembers||latestMembers||'—')+'</span></div>'+
-    '<div class="prog-row"><span class="prog-label">MRR</span><div class="prog-bar"><div class="prog-fill" style="width:'+(snapMRR>0?Math.min(100,Math.round((curMRR/snapMRR)*50)):curMRR>0?30:0)+'%;background:linear-gradient(90deg,#4DD9C0,#38BDF8,#818CF8);box-shadow:0 0 8px rgba(77,217,192,0.4)"></div></div><span class="prog-val">'+(curMRR>0?'$'+Math.round(curMRR).toLocaleString():'—')+'</span></div>'+
-    (snapMembers>0?'<div class="prog-row"><span class="prog-label">Member Growth</span><div class="prog-bar"><div class="prog-fill" style="width:'+Math.max(0,memberGrowth)+'%;background:linear-gradient(90deg,#38BDF8,#818CF8,#7F77DD);box-shadow:0 0 8px rgba(127,119,221,0.35)"></div></div><span class="prog-val">+'+Math.max(0,curMembers-snapMembers)+'</span></div>':'')+
-    (snapMRR>0?'<div class="prog-row"><span class="prog-label">MRR Growth</span><div class="prog-bar"><div class="prog-fill" style="width:'+Math.max(0,mrrGrowth)+'%;background:linear-gradient(90deg,#4DD9C0,#38BDF8,#818CF8);box-shadow:0 0 8px rgba(77,217,192,0.4)"></div></div><span class="prog-val">+$'+Math.max(0,Math.round(curMRR-snapMRR))+'</span></div>':'');
+    '<div class="prog-row"><span class="prog-label">Days Completed</span><div class="prog-bar"><div class="prog-fill" style="width:'+pctDays+'%;background:linear-gradient(90deg,#818CF8,#38BDF8,#4DD9C0);box-shadow:0 0 8px rgba(56,189,248,0.4)"></div></div><span class="prog-val">'+pctDays+'%</span></div>'+
+    '<div class="prog-row"><span class="prog-label">Member Growth</span><div class="prog-bar"><div class="prog-fill" style="width:'+memberBarPct+'%;background:linear-gradient(90deg,#38BDF8,#818CF8,#a78bfa);box-shadow:0 0 8px rgba(127,119,221,0.4)"></div></div><span class="prog-val">'+(memberDelta>=0?'+':'')+memberDelta+'</span></div>'+
+    '<div class="prog-row"><span class="prog-label">MRR Growth</span><div class="prog-bar"><div class="prog-fill" style="width:'+mrrBarPct+'%;background:linear-gradient(90deg,#4DD9C0,#38BDF8,#818CF8);box-shadow:0 0 8px rgba(77,217,192,0.4)"></div></div><span class="prog-val">'+(mrrDelta>=0?'+$':'-$')+Math.abs(Math.round(mrrDelta))+'</span></div>'+
+    '<div class="prog-row"><span class="prog-label">Follower Growth</span><div class="prog-bar"><div class="prog-fill" style="width:'+followerBarPct+'%;background:linear-gradient(90deg,#4DD9C0,#38BDF8,#a78bfa);box-shadow:0 0 8px rgba(56,189,248,0.4)"></div></div><span class="prog-val">'+(followerDelta>=0?'+':'')+followerDelta.toLocaleString()+'</span></div>';
 
   var dn = getDayNum(TODAY);
   if(dn){
